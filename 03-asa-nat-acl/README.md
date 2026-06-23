@@ -10,12 +10,12 @@ Business Scenario
 
 A network engineer requested a lab example showing how the ASA configuration would work before applying a similar design in a real environment.
 
-The company has two internal sites:
+##The company has two internal sites:
 
 - Site-A: 192.168.1.0/24
 - Site-B: 10.100.100.0/24
 
-Server-A can be located in either site:
+##Server-A can be located in either site:
 
 - Server-A in Site-A: 192.168.1.10
 - Server-A in Site-B: 10.100.100.10
@@ -23,6 +23,7 @@ Server-A can be located in either site:
 External clients should not need to know the real IP address of Server-A. They should always connect to the same destination IP: 8.8.8.8.
 
 ##Lab Goals
+
 - Site-A and Site-B must be able to communicate with each other.
 - Both sites must have connectivity to the external server network 4.4.4.0/29.
 - Clients behind R-Client must be able to reach 8.8.8.8 using ICMP, SSH, or HTTPS.
