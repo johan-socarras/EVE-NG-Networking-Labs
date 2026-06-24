@@ -85,37 +85,6 @@ Gi0/0       10,20,30,99-100,999
 Port        Vlans in spanning tree forwarding state and not pruned
 Gi0/0       10,20,30,99-100,999
 ```
-```cisco
-ASW-DC-02#sh vlan brief
-
-VLAN Name                             Status    Ports
----- -------------------------------- --------- -------------------------------
-1    default                          active    Gi0/2, Gi0/3, Gi1/0, Gi1/1
-                                                Gi1/2, Gi1/3
-10   Management                       active
-20   Data                             active
-30   Voice                            active    Gi0/1
-99   Native-trunk                     active
-100  Server                           active
-999  Isolated-Lab                     active    Gi0/1
-1002 fddi-default                     act/unsup
-1003 token-ring-default               act/unsup
-1004 fddinet-default                  act/unsup
-1005 trnet-default                    act/unsup
-ASW-DC-02#show interfaces trunk
-
-Port        Mode             Encapsulation  Status        Native vlan
-Gi0/0       on               802.1q         trunking      99
-
-Port        Vlans allowed on trunk
-Gi0/0       10,20,30,99-100,999
-
-Port        Vlans allowed and active in management domain
-Gi0/0       10,20,30,99-100,999
-
-Port        Vlans in spanning tree forwarding state and not pruned
-Gi0/0       10,20,30,99-100,999
-```
 
 ```cisco
 CSW-A-01#sh vlan brief
@@ -150,38 +119,6 @@ Gi0/1       10,20,30,99-100,999
 ```
 
 ```cisco
-ASW-A-01#sh vlan brief
-
-VLAN Name                             Status    Ports
----- -------------------------------- --------- -------------------------------
-1    default                          active    Gi0/2, Gi0/3, Gi1/0, Gi1/1
-                                                Gi1/2, Gi1/3
-10   Management                       active
-20   Data                             active
-30   Voice                            active    Gi0/1
-99   Native-trunk                     active
-100  Server                           active
-999  Isolated-Lab                     active    Gi0/1
-1002 fddi-default                     act/unsup
-1003 token-ring-default               act/unsup
-1004 fddinet-default                  act/unsup
-1005 trnet-default                    act/unsup
-ASW-A-01#show interfaces trunk
-
-Port        Mode             Encapsulation  Status        Native vlan
-Gi0/0       on               802.1q         trunking      99
-
-Port        Vlans allowed on trunk
-Gi0/0       10,20,30,99-100,999
-
-Port        Vlans allowed and active in management domain
-Gi0/0       10,20,30,99-100,999
-
-Port        Vlans in spanning tree forwarding state and not pruned
-Gi0/0       10,20,30,99-100,999
-```
-
-```cisco
 CSW-B-01#sh vlan brief
 
 VLAN Name                             Status    Ports
@@ -212,38 +149,7 @@ Gi0/1       10,20,30,99-100,999
 Port        Vlans in spanning tree forwarding state and not pruned
 Gi0/1       10,20,30,99-100,999
 ```
-
-```cisco
-ASW-B-01#sh vlan brief
-
-VLAN Name                             Status    Ports
----- -------------------------------- --------- -------------------------------
-1    default                          active    Gi0/2, Gi0/3, Gi1/0, Gi1/1
-                                                Gi1/2, Gi1/3
-10   Management                       active
-20   Data                             active
-30   Voice                            active    Gi0/1
-99   Native-trunk                     active
-100  Server                           active
-999  Isolated-Lab                     active    Gi0/1
-1002 fddi-default                     act/unsup
-1003 token-ring-default               act/unsup
-1004 fddinet-default                  act/unsup
-1005 trnet-default                    act/unsup
-ASW-B-01#show interfaces trunk
-
-Port        Mode             Encapsulation  Status        Native vlan
-Gi0/0       on               802.1q         trunking      99
-
-Port        Vlans allowed on trunk
-Gi0/0       10,20,30,99-100,999
-
-Port        Vlans allowed and active in management domain
-Gi0/0       10,20,30,99-100,999
-
-Port        Vlans in spanning tree forwarding state and not pruned
-Gi0/0       10,20,30,99-100,999
-```
+The same verification was completed on the remaining access switches.
 
 Status: Passed
 
@@ -445,95 +351,6 @@ Gi0/0               Root FWD 4         128.1    P2p
 ```
 
 ```cisco
-ASW-DC-02#show spanning-tree summary
-Switch is in rapid-pvst mode
-Root bridge for: none
-Extended system ID                      is enabled
-Portfast Default                        is disabled
-Portfast Edge BPDU Guard Default        is disabled
-Portfast Edge BPDU Filter Default       is disabled
-Loopguard Default                       is disabled
-PVST Simulation Default                 is enabled but inactive in rapid-pvst mode
-Bridge Assurance                        is enabled
-EtherChannel misconfig guard            is enabled
-Configured Pathcost method used is short
-UplinkFast                              is disabled
-BackboneFast                            is disabled
-
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0010                     0         0        0          1          1
-VLAN0020                     0         0        0          1          1
-VLAN0030                     0         0        0          2          2
-VLAN0099                     0         0        0          1          1
-VLAN0100                     0         0        0          1          1
-
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0999                     0         0        0          2          2
----------------------- -------- --------- -------- ---------- ----------
-6 vlans                      0         0        0          8          8
-ASW-DC-02#show spanning-tree vlan 10
-
-VLAN0010
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24586
-             Address     5000.0004.0000
-             Cost        4
-             Port        1 (GigabitEthernet0/0)
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    32778  (priority 32768 sys-id-ext 10)
-             Address     5000.0006.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/0               Root FWD 4         128.1    P2p
-
-
-ASW-DC-02#show spanning-tree vlan 20
-
-VLAN0020
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24596
-             Address     5000.0004.0000
-             Cost        4
-             Port        1 (GigabitEthernet0/0)
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    32788  (priority 32768 sys-id-ext 20)
-             Address     5000.0006.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/0               Root FWD 4         128.1    P2p
-
-
-ASW-DC-02#show spanning-tree vlan 99
-
-VLAN0099
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24675
-             Address     5000.0004.0000
-             Cost        4
-             Port        1 (GigabitEthernet0/0)
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    32867  (priority 32768 sys-id-ext 99)
-             Address     5000.0006.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/0               Root FWD 4         128.1    P2p
-```
-
-```cisco
 CSW-A-01#show spanning-tree summary
 Switch is in rapid-pvst mode
 Root bridge for: VLAN0010, VLAN0020, VLAN0030, VLAN0099-VLAN0100, VLAN0999
@@ -617,95 +434,6 @@ VLAN0099
 Interface           Role Sts Cost      Prio.Nbr Type
 ------------------- ---- --- --------- -------- --------------------------------
 Gi0/1               Desg FWD 4         128.2    P2p
-```
-
-```cisco
-ASW-A-01#show spanning-tree summary
-Switch is in rapid-pvst mode
-Root bridge for: none
-Extended system ID                      is enabled
-Portfast Default                        is disabled
-Portfast Edge BPDU Guard Default        is disabled
-Portfast Edge BPDU Filter Default       is disabled
-Loopguard Default                       is disabled
-PVST Simulation Default                 is enabled but inactive in rapid-pvst mode
-Bridge Assurance                        is enabled
-EtherChannel misconfig guard            is enabled
-Configured Pathcost method used is short
-UplinkFast                              is disabled
-BackboneFast                            is disabled
-
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0010                     0         0        0          1          1
-VLAN0020                     0         0        0          1          1
-VLAN0030                     0         0        0          2          2
-VLAN0099                     0         0        0          1          1
-VLAN0100                     0         0        0          1          1
-
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0999                     0         0        0          2          2
----------------------- -------- --------- -------- ---------- ----------
-6 vlans                      0         0        0          8          8
-ASW-A-01#show spanning-tree vlan 10
-
-VLAN0010
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24586
-             Address     5000.000b.0000
-             Cost        4
-             Port        1 (GigabitEthernet0/0)
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    32778  (priority 32768 sys-id-ext 10)
-             Address     5000.000e.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/0               Root FWD 4         128.1    P2p
-
-
-ASW-A-01#show spanning-tree vlan 20
-
-VLAN0020
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24596
-             Address     5000.000b.0000
-             Cost        4
-             Port        1 (GigabitEthernet0/0)
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    32788  (priority 32768 sys-id-ext 20)
-             Address     5000.000e.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/0               Root FWD 4         128.1    P2p
-
-
-ASW-A-01#show spanning-tree vlan 99
-
-VLAN0099
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24675
-             Address     5000.000b.0000
-             Cost        4
-             Port        1 (GigabitEthernet0/0)
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    32867  (priority 32768 sys-id-ext 99)
-             Address     5000.000e.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/0               Root FWD 4         128.1    P2p
 ```
 
 ```cisco
@@ -793,96 +521,7 @@ Interface           Role Sts Cost      Prio.Nbr Type
 ------------------- ---- --- --------- -------- --------------------------------
 Gi0/1               Desg FWD 4         128.2    P2p
 ```
-
-```cisco
-ASW-B-01#show spanning-tree summary
-Switch is in rapid-pvst mode
-Root bridge for: VLAN0001
-Extended system ID                      is enabled
-Portfast Default                        is disabled
-Portfast Edge BPDU Guard Default        is disabled
-Portfast Edge BPDU Filter Default       is disabled
-Loopguard Default                       is disabled
-PVST Simulation Default                 is enabled but inactive in rapid-pvst mode
-Bridge Assurance                        is enabled
-EtherChannel misconfig guard            is enabled
-Configured Pathcost method used is short
-UplinkFast                              is disabled
-BackboneFast                            is disabled
-
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0001                     0         0        0          6          6
-VLAN0010                     0         0        0          1          1
-VLAN0020                     0         0        0          1          1
-VLAN0030                     0         0        0          2          2
-VLAN0099                     0         0        0          1          1
-
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0100                     0         0        0          1          1
-VLAN0999                     0         0        0          2          2
----------------------- -------- --------- -------- ---------- ----------
-7 vlans                      0         0        0         14         14
-ASW-B-01#show spanning-tree vlan 10
-
-VLAN0010
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24586
-             Address     5000.000c.0000
-             Cost        4
-             Port        1 (GigabitEthernet0/0)
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    32778  (priority 32768 sys-id-ext 10)
-             Address     5000.000d.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/0               Root FWD 4         128.1    P2p
-
-
-ASW-B-01#show spanning-tree vlan 20
-
-VLAN0020
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24596
-             Address     5000.000c.0000
-             Cost        4
-             Port        1 (GigabitEthernet0/0)
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    32788  (priority 32768 sys-id-ext 20)
-             Address     5000.000d.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/0               Root FWD 4         128.1    P2p
-
-
-ASW-B-01#show spanning-tree vlan 99
-
-VLAN0099
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24675
-             Address     5000.000c.0000
-             Cost        4
-             Port        1 (GigabitEthernet0/0)
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    32867  (priority 32768 sys-id-ext 99)
-             Address     5000.000d.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/0               Root FWD 4         128.1    P2p
-```
+The same verification was completed on the remaining access switches.
 
 Status: Passed
 
