@@ -264,7 +264,7 @@ Expected result:
 * Root bridge placement should match the lab design.
 * Access ports should use PortFast and BPDU Guard where appropriate.
 
-'''cisco
+```cisco
 CSW-DC-01#show spanning-tree summary
 Switch is in rapid-pvst mode
 Root bridge for: VLAN0010, VLAN0020, VLAN0030, VLAN0099-VLAN0100, VLAN0999
@@ -351,9 +351,9 @@ Interface           Role Sts Cost      Prio.Nbr Type
 ------------------- ---- --- --------- -------- --------------------------------
 Gi0/1               Desg FWD 4         128.2    P2p
 Gi0/2               Desg FWD 4         128.3    P2p
-'''
+```
 
-'''cisco
+```cisco 
 ASW-DC-01#show spanning-tree summary
 Switch is in rapid-pvst mode
 Root bridge for: none
@@ -440,9 +440,9 @@ VLAN0099
 Interface           Role Sts Cost      Prio.Nbr Type
 ------------------- ---- --- --------- -------- --------------------------------
 Gi0/0               Root FWD 4         128.1    P2p
-'''
+```
 
-'''cisco
+```cisco
 ASW-DC-02#show spanning-tree summary
 Switch is in rapid-pvst mode
 Root bridge for: none
@@ -529,9 +529,9 @@ VLAN0099
 Interface           Role Sts Cost      Prio.Nbr Type
 ------------------- ---- --- --------- -------- --------------------------------
 Gi0/0               Root FWD 4         128.1    P2p
-'''
+```
 
-'''cisco
+```cisco
 CSW-A-01#show spanning-tree summary
 Switch is in rapid-pvst mode
 Root bridge for: VLAN0010, VLAN0020, VLAN0030, VLAN0099-VLAN0100, VLAN0999
@@ -615,10 +615,9 @@ VLAN0099
 Interface           Role Sts Cost      Prio.Nbr Type
 ------------------- ---- --- --------- -------- --------------------------------
 Gi0/1               Desg FWD 4         128.2    P2p
+```
 
-'''
-
-'''cisco
+```cisco
 ASW-A-01#show spanning-tree summary
 Switch is in rapid-pvst mode
 Root bridge for: none
@@ -705,9 +704,9 @@ VLAN0099
 Interface           Role Sts Cost      Prio.Nbr Type
 ------------------- ---- --- --------- -------- --------------------------------
 Gi0/0               Root FWD 4         128.1    P2p
-'''
+```
 
-'''cisco
+```cisco
 CSW-B-01#show spanning-tree summary
 Switch is in rapid-pvst mode
 Root bridge for: VLAN0010, VLAN0020, VLAN0030, VLAN0099-VLAN0100, VLAN0999
@@ -791,9 +790,9 @@ VLAN0099
 Interface           Role Sts Cost      Prio.Nbr Type
 ------------------- ---- --- --------- -------- --------------------------------
 Gi0/1               Desg FWD 4         128.2    P2p
-'''
+```
 
-'''cisco
+```cisco
 ASW-B-01#show spanning-tree summary
 Switch is in rapid-pvst mode
 Root bridge for: VLAN0001
@@ -881,7 +880,7 @@ VLAN0099
 Interface           Role Sts Cost      Prio.Nbr Type
 ------------------- ---- --- --------- -------- --------------------------------
 Gi0/0               Root FWD 4         128.1    P2p
-'''
+```
 
 Status: Passed
 
