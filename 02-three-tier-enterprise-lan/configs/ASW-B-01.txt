@@ -1,0 +1,146 @@
+ASW-B-01#sh run
+Building configuration...
+
+Current configuration : 2269 bytes
+!
+! Last configuration change at 18:08:27 UTC Wed Jun 24 2026
+!
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+service compress-config
+!
+hostname ASW-B-01
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret 5 ************
+!
+username ******* privilege 15 password 0 ********
+no aaa new-model
+!
+!
+!
+!
+!
+vtp mode off
+!
+!
+!
+no ip domain-lookup
+ip domain-name admin
+ip cef
+no ipv6 cef
+!
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+!
+!
+vlan 10
+ name Management
+!
+vlan 20
+ name Data
+!
+vlan 30
+ name Voice
+!
+vlan 99
+ name Native-trunk
+!
+vlan 100
+ name Server
+!
+vlan 999
+ name Isolated-Lab
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0
+ description to CSW-B-01
+ switchport trunk allowed vlan 10,20,30,99,100,999
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 99
+ switchport mode trunk
+ negotiation auto
+!
+interface GigabitEthernet0/1
+ description to SRV-B-01
+ switchport access vlan 999
+ switchport mode access
+ switchport voice vlan 30
+ negotiation auto
+ spanning-tree portfast edge
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet0/2
+ negotiation auto
+!
+interface GigabitEthernet0/3
+ negotiation auto
+!
+interface GigabitEthernet1/0
+ negotiation auto
+!
+interface GigabitEthernet1/1
+ negotiation auto
+!
+interface GigabitEthernet1/2
+ negotiation auto
+!
+interface GigabitEthernet1/3
+ negotiation auto
+!
+ip forward-protocol nd
+!
+no ip http server
+!
+ip ssh version 2
+ip ssh server algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+!
+!
+!
+!
+!
+!
+control-plane
+!
+banner motd ^C
+
+**********************************************************************
+* *
+* UNAUTHORIZED ACCESS PROHIBITED                *
+* *
+* This system is for the use of authorized users only. Individuals  *
+* using this computer system without authority, or in excess of     *
+* their authority, are subject to having all of their activities    *
+* monitored and recorded by system personnel.                       *
+* *
+**********************************************************************^C
+!
+line con 0
+line aux 0
+line vty 0 4
+ exec-timeout 3 0
+ login local
+ transport input ssh
+!
+!
+end

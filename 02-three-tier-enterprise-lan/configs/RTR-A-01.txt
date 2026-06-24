@@ -1,0 +1,139 @@
+RTR-A-01#sh run
+Building configuration...
+
+Current configuration : 2217 bytes
+!
+! Last configuration change at 18:40:52 UTC Wed Jun 24 2026
+!
+version 15.9
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname RTR-A-01
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret 9 *********************
+!
+no aaa new-model
+!
+!
+!
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip domain name admin
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+username *********** privilege 15 password 0 *********
+!
+redundancy
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0
+ ip address 172.16.0.9 255.255.255.252
+ duplex auto
+ speed auto
+ media-type rj45
+!
+interface GigabitEthernet0/1
+ ip address 172.16.0.2 255.255.255.252
+ duplex auto
+ speed auto
+ media-type rj45
+!
+interface GigabitEthernet0/2
+ ip address 10.1.0.1 255.255.255.252
+ ip ospf 1 area 0
+ duplex auto
+ speed auto
+ media-type rj45
+!
+interface GigabitEthernet0/3
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+router ospf 1
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 10.0.10.0 255.255.255.0 172.16.0.1
+ip route 10.0.20.0 255.255.255.0 172.16.0.1
+ip route 10.0.99.0 255.255.255.0 172.16.0.1
+ip route 10.0.100.0 255.255.255.0 172.16.0.1
+ip route 10.2.10.0 255.255.255.0 172.16.0.10
+ip route 10.2.20.0 255.255.255.0 172.16.0.10
+ip route 10.2.99.0 255.255.255.0 172.16.0.10
+ip route 10.2.100.0 255.255.255.0 172.16.0.10
+ip ssh version 2
+!
+ipv6 ioam timestamp
+!
+!
+!
+control-plane
+!
+banner motd ^C
+
+**********************************************************************
+* *
+* UNAUTHORIZED ACCESS PROHIBITED                *
+* *
+* This system is for the use of authorized users only. Individuals  *
+* using this computer system without authority, or in excess of     *
+* their authority, are subject to having all of their activities    *
+* monitored and recorded by system personnel.                       *
+* *
+**********************************************************************^C
+!
+line con 0
+line aux 0
+line vty 0 4
+ exec-timeout 3 0
+ login local
+ transport input ssh
+!
+no scheduler allocate
+!
+end
