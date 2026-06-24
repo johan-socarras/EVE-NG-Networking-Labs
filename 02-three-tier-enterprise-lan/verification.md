@@ -116,6 +116,7 @@ Gi0/0       10,20,30,99-100,999
 Port        Vlans in spanning tree forwarding state and not pruned
 Gi0/0       10,20,30,99-100,999
 ```
+
 ```cisco
 CSW-A-01#sh vlan brief
 
@@ -147,6 +148,7 @@ Gi0/1       10,20,30,99-100,999
 Port        Vlans in spanning tree forwarding state and not pruned
 Gi0/1       10,20,30,99-100,999
 ```
+
 ```cisco
 ASW-A-01#sh vlan brief
 
@@ -178,6 +180,7 @@ Gi0/0       10,20,30,99-100,999
 Port        Vlans in spanning tree forwarding state and not pruned
 Gi0/0       10,20,30,99-100,999
 ```
+
 ```cisco
 CSW-B-01#sh vlan brief
 
@@ -209,6 +212,7 @@ Gi0/1       10,20,30,99-100,999
 Port        Vlans in spanning tree forwarding state and not pruned
 Gi0/1       10,20,30,99-100,999
 ```
+
 ```cisco
 ASW-B-01#sh vlan brief
 
@@ -240,6 +244,7 @@ Gi0/0       10,20,30,99-100,999
 Port        Vlans in spanning tree forwarding state and not pruned
 Gi0/0       10,20,30,99-100,999
 ```
+
 Status: Passed
 
 ## 2. STP Verification
