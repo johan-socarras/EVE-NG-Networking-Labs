@@ -88,16 +88,16 @@ The lab includes basic enterprise security practices:
 
 Sanitized device configurations are stored in the `configs` folder.
 
-* `configs/RTR-DC-01.txt`
-* `configs/RTR-A-01.txt`
-* `configs/RTR-B-01.txt`
-* `configs/CSW-DC-01.txt`
-* `configs/ASW-DC-01.txt`
-* `configs/ASW-DC-02.txt`
-* `configs/CSW-A-01.txt`
-* `configs/ASW-A-01.txt`
-* `configs/CSW-B-01.txt`
-* `configs/ASW-B-01.txt`
+- [RTR-DC-01 Configuration](configs/RTR-DC-01.txt)
+- [RTR-A-01 Configuration](configs/RTR-A-01.txt)
+- [RTR-B-01 Configuration](configs/RTR-B-01.txt)
+- [CSW-DC-01 Configuration](configs/CSW-DC-01.txt)
+- [ASW-DC-01 Configuration](configs/ASW-DC-01.txt)
+- [ASW-DC-02 Configuration](configs/ASW-DC-02.txt)
+- [CSW-A-01 Configuration](configs/CSW-A-01.txt)
+- [ASW-A-01 Configuration](configs/ASW-A-01.txt)
+- [CSW-B-01 Configuration](configs/CSW-B-01.txt)
+- [ASW-B-01 Configuration](configs/ASW-B-01.txt)
 
 ## Verification
 
