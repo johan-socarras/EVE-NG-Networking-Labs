@@ -117,18 +117,130 @@ Port        Vlans in spanning tree forwarding state and not pruned
 Gi0/0       10,20,30,99-100,999
 ```
 ```cisco
-CSW-A-01
+CSW-A-01#sh vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Gi0/2, Gi0/3, Gi1/0, Gi1/1
+                                                Gi1/2, Gi1/3
+10   Management                       active
+20   Data                             active
+30   Voice                            active
+99   Native-trunk                     active
+100  Server                           active
+999  Isolated-Lab                     active
+1002 fddi-default                     act/unsup
+1003 token-ring-default               act/unsup
+1004 fddinet-default                  act/unsup
+1005 trnet-default                    act/unsup
+CSW-A-01#show interfaces trunk
+
+Port        Mode             Encapsulation  Status        Native vlan
+Gi0/1       on               802.1q         trunking      99
+
+Port        Vlans allowed on trunk
+Gi0/1       10,20,30,99-100,999
+
+Port        Vlans allowed and active in management domain
+Gi0/1       10,20,30,99-100,999
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Gi0/1       10,20,30,99-100,999
 ```
 ```cisco
-ASW-A-01
+ASW-A-01#sh vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Gi0/2, Gi0/3, Gi1/0, Gi1/1
+                                                Gi1/2, Gi1/3
+10   Management                       active
+20   Data                             active
+30   Voice                            active    Gi0/1
+99   Native-trunk                     active
+100  Server                           active
+999  Isolated-Lab                     active    Gi0/1
+1002 fddi-default                     act/unsup
+1003 token-ring-default               act/unsup
+1004 fddinet-default                  act/unsup
+1005 trnet-default                    act/unsup
+ASW-A-01#show interfaces trunk
+
+Port        Mode             Encapsulation  Status        Native vlan
+Gi0/0       on               802.1q         trunking      99
+
+Port        Vlans allowed on trunk
+Gi0/0       10,20,30,99-100,999
+
+Port        Vlans allowed and active in management domain
+Gi0/0       10,20,30,99-100,999
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Gi0/0       10,20,30,99-100,999
 ```
 ```cisco
-CSW-B-01
+CSW-B-01#sh vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Gi0/2, Gi0/3, Gi1/0, Gi1/1
+                                                Gi1/2, Gi1/3
+10   Management                       active
+20   Data                             active
+30   Voice                            active
+99   Native-trunk                     active
+100  Server                           active
+999  Isolated-Lab                     active
+1002 fddi-default                     act/unsup
+1003 token-ring-default               act/unsup
+1004 fddinet-default                  act/unsup
+1005 trnet-default                    act/unsup
+CSW-B-01#show interfaces trunk
+
+Port        Mode             Encapsulation  Status        Native vlan
+Gi0/1       on               802.1q         trunking      99
+
+Port        Vlans allowed on trunk
+Gi0/1       10,20,30,99-100,999
+
+Port        Vlans allowed and active in management domain
+Gi0/1       10,20,30,99-100,999
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Gi0/1       10,20,30,99-100,999
 ```
 ```cisco
-ASW-B-01
+ASW-B-01#sh vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Gi0/2, Gi0/3, Gi1/0, Gi1/1
+                                                Gi1/2, Gi1/3
+10   Management                       active
+20   Data                             active
+30   Voice                            active    Gi0/1
+99   Native-trunk                     active
+100  Server                           active
+999  Isolated-Lab                     active    Gi0/1
+1002 fddi-default                     act/unsup
+1003 token-ring-default               act/unsup
+1004 fddinet-default                  act/unsup
+1005 trnet-default                    act/unsup
+ASW-B-01#show interfaces trunk
+
+Port        Mode             Encapsulation  Status        Native vlan
+Gi0/0       on               802.1q         trunking      99
+
+Port        Vlans allowed on trunk
+Gi0/0       10,20,30,99-100,999
+
+Port        Vlans allowed and active in management domain
+Gi0/0       10,20,30,99-100,999
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Gi0/0       10,20,30,99-100,999
 ```
-Status: Passed / Pending
+Status: Passed
 
 ## 2. STP Verification
 
