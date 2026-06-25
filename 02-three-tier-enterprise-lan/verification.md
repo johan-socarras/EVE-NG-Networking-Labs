@@ -521,6 +521,7 @@ Interface           Role Sts Cost      Prio.Nbr Type
 ------------------- ---- --- --------- -------- --------------------------------
 Gi0/1               Desg FWD 4         128.2    P2p
 ```
+
 The same verification was completed on the remaining access switches.
 
 Status: Passed
@@ -540,7 +541,95 @@ Expected result:
 * SVIs should be up/up for active VLANs.
 * Connected routes should appear for local VLANs and point-to-point links.
 
-Status: Passed / Pending
+Verifications:
+
+```cisco
+RTR-DC-01#show ip int brief
+Interface                  IP-Address      OK? Method Status                Protocol
+GigabitEthernet0/0         10.0.0.1        YES NVRAM  up                    up
+GigabitEthernet0/1         172.16.0.5      YES NVRAM  up                    up
+GigabitEthernet0/2         172.16.0.1      YES NVRAM  up                    up
+GigabitEthernet0/3         unassigned      YES NVRAM  administratively down down
+RTR-DC-01#show ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override, p - overrides from PfR
+
+Gateway of last resort is not set
+
+      10.0.0.0/8 is variably subnetted, 14 subnets, 3 masks
+C        10.0.0.0/30 is directly connected, GigabitEthernet0/0
+L        10.0.0.1/32 is directly connected, GigabitEthernet0/0
+O        10.0.10.0/24 [110/2] via 10.0.0.2, 00:33:09, GigabitEthernet0/0
+O        10.0.20.0/24 [110/2] via 10.0.0.2, 00:33:09, GigabitEthernet0/0
+O        10.0.99.0/24 [110/2] via 10.0.0.2, 00:33:09, GigabitEthernet0/0
+O        10.0.100.0/24 [110/2] via 10.0.0.2, 00:33:09, GigabitEthernet0/0
+S        10.1.10.0/24 [1/0] via 172.16.0.2
+S        10.1.20.0/24 [1/0] via 172.16.0.2
+S        10.1.99.0/24 [1/0] via 172.16.0.2
+S        10.1.100.0/24 [1/0] via 172.16.0.2
+S        10.2.10.0/24 [1/0] via 172.16.0.6
+S        10.2.20.0/24 [1/0] via 172.16.0.6
+S        10.2.99.0/24 [1/0] via 172.16.0.6
+S        10.2.100.0/24 [1/0] via 172.16.0.6
+      172.16.0.0/16 is variably subnetted, 4 subnets, 2 masks
+C        172.16.0.0/30 is directly connected, GigabitEthernet0/2
+L        172.16.0.1/32 is directly connected, GigabitEthernet0/2
+C        172.16.0.4/30 is directly connected, GigabitEthernet0/1
+L        172.16.0.5/32 is directly connected, GigabitEthernet0/1
+```
+
+```cisco
+CSW-DC-01#show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet0/0     10.0.0.2        YES NVRAM  up                    up
+GigabitEthernet0/1     unassigned      YES unset  up                    up
+GigabitEthernet0/2     unassigned      YES unset  up                    up
+GigabitEthernet0/3     unassigned      YES unset  administratively down down
+GigabitEthernet1/0     unassigned      YES unset  administratively down down
+GigabitEthernet1/1     unassigned      YES unset  administratively down down
+GigabitEthernet1/2     unassigned      YES unset  administratively down down
+GigabitEthernet1/3     unassigned      YES unset  administratively down down
+Vlan10                 10.0.10.1       YES NVRAM  up                    up
+Vlan20                 10.0.20.1       YES NVRAM  up                    up
+Vlan100                10.0.100.1      YES NVRAM  up                    up
+Vlan999                10.0.99.1       YES NVRAM  up                    up
+CSW-DC-01#show ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override, p - overrides from PfR
+
+Gateway of last resort is 10.0.0.1 to network 0.0.0.0
+
+S*    0.0.0.0/0 [1/0] via 10.0.0.1
+      10.0.0.0/8 is variably subnetted, 10 subnets, 3 masks
+C        10.0.0.0/30 is directly connected, GigabitEthernet0/0
+L        10.0.0.2/32 is directly connected, GigabitEthernet0/0
+C        10.0.10.0/24 is directly connected, Vlan10
+L        10.0.10.1/32 is directly connected, Vlan10
+C        10.0.20.0/24 is directly connected, Vlan20
+L        10.0.20.1/32 is directly connected, Vlan20
+C        10.0.99.0/24 is directly connected, Vlan999
+L        10.0.99.1/32 is directly connected, Vlan999
+C        10.0.100.0/24 is directly connected, Vlan100
+L        10.0.100.1/32 is directly connected, Vlan100
+```
+
+The same verification was completed on the remaining devices
+
+Status: Passed
 
 ## 4. OSPF Verification
 
@@ -560,39 +649,166 @@ Expected result:
 * User/server VLANs should be advertised into OSPF.
 * End-user VLAN interfaces should be passive when appropriate.
 
-Status: Passed / Pending
+Verifications:
+
+```cisco
+RTR-DC-01#show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+10.0.100.1        1   FULL/BDR        00:00:30    10.0.0.2        GigabitEthernet0/0
+RTR-DC-01#show ip ospf interface brief
+Interface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C
+Gi0/0        1     0               10.0.0.1/30        1     DR    1/1
+RTR-DC-01#show ip route ospf
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override, p - overrides from PfR
+
+Gateway of last resort is not set
+
+      10.0.0.0/8 is variably subnetted, 14 subnets, 3 masks
+O        10.0.10.0/24 [110/2] via 10.0.0.2, 00:36:43, GigabitEthernet0/0
+O        10.0.20.0/24 [110/2] via 10.0.0.2, 00:36:43, GigabitEthernet0/0
+O        10.0.99.0/24 [110/2] via 10.0.0.2, 00:36:43, GigabitEthernet0/0
+O        10.0.100.0/24 [110/2] via 10.0.0.2, 00:36:43, GigabitEthernet0/0
+RTR-DC-01#show ip protocols
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "application"
+  Sending updates every 0 seconds
+  Invalid after 0 seconds, hold down 0, flushed after 0
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Maximum path: 32
+  Routing for Networks:
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+  Distance: (default is 4)
+
+Routing Protocol is "ospf 1"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 172.16.0.5
+  Number of areas in this router is 1. 1 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+  Routing on Interfaces Configured Explicitly (Area 0):
+    GigabitEthernet0/0
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    10.0.100.1           110      00:36:52
+  Distance: (default is 110)
+```
+
+```cisco
+CSW-DC-01#show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+172.16.0.5        1   FULL/DR         00:00:34    10.0.0.1        GigabitEthernet0/0
+CSW-DC-01#show ip ospf interface brief
+Interface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C
+Vl999        1     0               10.0.99.1/24       1     DR    0/0
+Vl100        1     0               10.0.100.1/24      1     DR    0/0
+Vl20         1     0               10.0.20.1/24       1     DR    0/0
+Vl10         1     0               10.0.10.1/24       1     DR    0/0
+Gi0/0        1     0               10.0.0.2/30        1     BDR   1/1
+CSW-DC-01#show ip route ospf
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override, p - overrides from PfR
+
+Gateway of last resort is 10.0.0.1 to network 0.0.0.0
+
+CSW-DC-01#show ip protocols
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "application"
+  Sending updates every 0 seconds
+  Invalid after 0 seconds, hold down 0, flushed after 0
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Maximum path: 32
+  Routing for Networks:
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+  Distance: (default is 4)
+
+Routing Protocol is "ospf 1"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 10.0.100.1
+  Number of areas in this router is 1. 1 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+  Routing on Interfaces Configured Explicitly (Area 0):
+    Vlan999
+    Vlan100
+    Vlan20
+    Vlan10
+    GigabitEthernet0/0
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+  Distance: (default is 110)
+```
+
+Status: Passed
 
 ## 5. Inter-Site Connectivity Tests
 
 Test from Data Center to Site-A:
 
 ```bash
-ping 10.1.99.10
+SRV-DC-01> ping 10.1.99.10
+
+84 bytes from 10.1.99.10 icmp_seq=1 ttl=60 time=10.385 ms
+84 bytes from 10.1.99.10 icmp_seq=2 ttl=60 time=12.793 ms
+84 bytes from 10.1.99.10 icmp_seq=3 ttl=60 time=12.189 ms
+84 bytes from 10.1.99.10 icmp_seq=4 ttl=60 time=8.837 ms
+84 bytes from 10.1.99.10 icmp_seq=5 ttl=60 time=14.370 ms
 ```
 
 Test from Data Center to Site-B:
 
 ```bash
-ping 10.2.99.10
+SRV-DC-01> ping 10.2.99.10
+
+84 bytes from 10.2.99.10 icmp_seq=1 ttl=60 time=16.976 ms
+84 bytes from 10.2.99.10 icmp_seq=2 ttl=60 time=14.561 ms
+84 bytes from 10.2.99.10 icmp_seq=3 ttl=60 time=15.282 ms
+84 bytes from 10.2.99.10 icmp_seq=4 ttl=60 time=9.750 ms
+84 bytes from 10.2.99.10 icmp_seq=5 ttl=60 time=15.977 ms
 ```
 
 Test from Site-A to Site-B:
 
 ```bash
-ping 10.2.99.10
-```
+SRV-A-01> ping 10.2.99.10
 
-Test from Site-B to Site-A:
+84 bytes from 10.2.99.10 icmp_seq=1 ttl=60 time=13.271 ms
+84 bytes from 10.2.99.10 icmp_seq=2 ttl=60 time=14.710 ms
+84 bytes from 10.2.99.10 icmp_seq=3 ttl=60 time=12.905 ms
+84 bytes from 10.2.99.10 icmp_seq=4 ttl=60 time=12.174 ms
+84 bytes from 10.2.99.10 icmp_seq=5 ttl=60 time=9.015 ms
 
-```bash
-ping 10.1.99.10
 ```
 
 Expected result:
 
 * Devices in different sites should be able to reach each other according to the routing design.
 
-Status: Passed / Pending
+Status: Passed
 
 ## 6. Default Route Verification
 
@@ -600,15 +816,42 @@ Commands used:
 
 ```cisco
 show ip route 0.0.0.0
-show ip route
+```
+
+Verifications:
+
+```cisco
+CSW-DC-01#show ip route 0.0.0.0
+Routing entry for 0.0.0.0/0, supernet
+  Known via "static", distance 1, metric 0, candidate default path
+  Routing Descriptor Blocks:
+  * 10.0.0.1
+      Route metric is 0, traffic share count is 1
+```
+
+```cisco
+CSW-A-01#show ip route 0.0.0.0
+Routing entry for 0.0.0.0/0, supernet
+  Known via "static", distance 1, metric 0, candidate default path
+  Routing Descriptor Blocks:
+  * 10.1.0.1
+      Route metric is 0, traffic share count is 1
+```
+
+```cisco
+CSW-B-01#show ip route 0.0.0.0
+Routing entry for 0.0.0.0/0, supernet
+  Known via "static", distance 1, metric 0, candidate default path
+  Routing Descriptor Blocks:
+  * 10.2.0.1
+      Route metric is 0, traffic share count is 1
 ```
 
 Expected result:
 
 * Core switches should have a default route pointing toward the upstream router.
-* Remote sites should have a valid path back to the Data Center and other site networks.
 
-Status: Passed / Pending
+Status: Passed
 
 ## 7. Isolated VLAN Verification
 
@@ -619,12 +862,66 @@ show access-lists
 show running-config interface vlan 999
 ```
 
-Connectivity tests from an isolated VLAN host:
+Verifications:
 
-```bash
-ping <default-gateway>
-ping <internal-site-network>
-ping <allowed-external-destination>
+```cisco
+CSW-DC-01#show access-lists
+Extended IP access list Vlan999_Isolated
+    10 permit icmp any any
+    20 deny ip any 10.0.0.0 0.255.255.255
+    30 deny ip any 172.16.0.0 0.15.255.255
+    40 deny ip any 192.168.0.0 0.0.255.255
+    50 permit ip any any
+CSW-DC-01#show running-config interface vlan 999
+Building configuration...
+
+Current configuration : 116 bytes
+!
+interface Vlan999
+ ip address 10.0.99.1 255.255.255.0
+ ip access-group Vlan999_isolated in
+ ip ospf 1 area 0
+end
+```
+
+```cisco
+CSW-A-01#show access-lists
+Extended IP access list Vlan999_Isolated
+    10 permit icmp any any
+    20 deny ip any 10.0.0.0 0.255.255.255
+    30 deny ip any 172.16.0.0 0.15.255.255
+    40 deny ip any 192.168.0.0 0.0.255.255
+    50 permit ip any any
+CSW-A-01#show running-config interface vlan 999
+Building configuration...
+
+Current configuration : 116 bytes
+!
+interface Vlan999
+ ip address 10.1.99.1 255.255.255.0
+ ip access-group Vlan999_isolated in
+ ip ospf 1 area 0
+end
+```
+
+```cisco
+CSW-B-01#show access-lists
+Extended IP access list Vlan999_Isolated
+    10 permit icmp any any
+    20 deny ip any 10.0.0.0 0.255.255.255
+    30 deny ip any 172.16.0.0 0.15.255.255
+    40 deny ip any 192.168.0.0 0.0.255.255
+    50 permit ip any any
+CSW-B-01#show running-config interface vlan 999
+Building configuration...
+
+Current configuration : 116 bytes
+!
+interface Vlan999
+ ip address 10.2.99.1 255.255.255.0
+ ip access-group Vlan999_isolated in
+ ip ospf 1 area 0
+end
 ```
 
 Expected result:
@@ -633,7 +930,7 @@ Expected result:
 * The isolated VLAN should not have unrestricted access to internal private networks.
 * Allowed traffic should work according to the ACL design.
 
-Status: Passed / Pending
+Status: Passed
 
 ## 8. SSH Management Verification
 
@@ -644,10 +941,26 @@ show ip ssh
 show running-config | section line vty
 ```
 
-SSH test:
+Verifications:
 
-```bash
-ssh admin@<device-management-ip>
+```cisco
+CSW-DC-01#show ip ssh
+SSH Enabled - version 2.0
+Authentication methods:publickey,keyboard-interactive,password
+Authentication Publickey Algorithms:x509v3-ssh-rsa,ssh-rsa
+Hostkey Algorithms:x509v3-ssh-rsa,ssh-rsa
+Encryption Algorithms:aes128-ctr,aes192-ctr,aes256-ctr
+MAC Algorithms:hmac-sha1,hmac-sha1-96
+Authentication timeout: 120 secs; Authentication retries: 3
+Minimum expected Diffie Hellman key size : 1024 bits
+IOS Keys in SECSH format(ssh-rsa, base64 encoded): CSW-DC-01.administrator
+ssh-rsa ***********************************************************
+***********************************************************
+CSW-DC-01#show running-config | section line vty
+line vty 0 4
+ exec-timeout 3 0
+ login local
+ transport input ssh
 ```
 
 Expected result:
@@ -656,7 +969,7 @@ Expected result:
 * VTY lines should use local login.
 * Remote access should be limited to SSH.
 
-Status: Passed / Pending
+Status: Passed
 
 ## 9. Port Security / Access Port Verification
 
@@ -668,13 +981,50 @@ show port-security interface gigabitEthernet0/1
 show interfaces status
 ```
 
+Verifications:
+
+```cisco
+ASW-DC-01#show port-security interface g0/1
+Port Security              : Enabled
+Port Status                : Secure-up
+Violation Mode             : Restrict
+Aging Time                 : 0 mins
+Aging Type                 : Absolute
+SecureStatic Address Aging : Disabled
+Maximum MAC Addresses      : 1
+Total MAC Addresses        : 0
+Configured MAC Addresses   : 0
+Sticky MAC Addresses       : 0
+Last Source Address:Vlan   : 0000.0000.0000:0
+Security Violation Count   : 0
+ASW-DC-01#show port-security
+Secure Port  MaxSecureAddr  CurrentAddr  SecurityViolation  Security Action
+                (Count)       (Count)          (Count)
+---------------------------------------------------------------------------
+      Gi0/1              1            0                  0         Restrict
+---------------------------------------------------------------------------
+Total Addresses in System (excluding one mac per port)     : 0
+Max Addresses limit in System (excluding one mac per port) : 4096
+ASW-DC-01#show interfaces status
+
+Port      Name               Status       Vlan       Duplex  Speed Type
+Gi0/0     to CSW-DC-01       connected    trunk      a-full   auto RJ45
+Gi0/1     to SRV-DC-01       connected    999        a-full   auto RJ45
+Gi0/2                        disabled     1            auto   auto RJ45
+Gi0/3                        disabled     1            auto   auto RJ45
+Gi1/0                        disabled     1            auto   auto RJ45
+Gi1/1                        disabled     1            auto   auto RJ45
+Gi1/2                        disabled     1            auto   auto RJ45
+Gi1/3                        disabled     1            auto   auto RJ45
+```
+
 Expected result:
 
 * Access ports should be assigned to the correct VLAN.
 * PortFast and BPDU Guard should be enabled on end-device ports.
 * Port security should match the lab requirements if configured.
 
-Status: Passed / Pending
+Status: Passed
 
 ## 10. Final Result
 
@@ -692,4 +1042,4 @@ The lab successfully verifies:
 * SSH-based management access
 * Basic enterprise LAN troubleshooting
 
-Final status: Passed / Pending
+Final status: Passed
