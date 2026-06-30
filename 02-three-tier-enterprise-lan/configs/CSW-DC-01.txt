@@ -130,7 +130,7 @@ interface Vlan100
 !
 interface Vlan999
  ip address 10.0.99.1 255.255.255.0
- ip access-group Vlan999_isolated in
+ ip access-group Vlan999_Isolated in
  ip ospf 1 area 0
 !
 router ospf 1
