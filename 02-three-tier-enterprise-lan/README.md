@@ -93,7 +93,7 @@ Sanitized device configurations are stored in the `configs` folder.
 
 ## Verification
 
-Verification commands and test results are documented in [verification.md](verification.md)
+Verification commands and test results are documented in [verification.md](verification.md) file.
 
 ## Notes
 
