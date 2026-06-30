@@ -48,6 +48,8 @@ The lab focuses on building a scalable enterprise LAN design with redundant gate
 | -------- | -------------------------- |
 | VLAN 10  | Management                 |
 | VLAN 20  | Data                       |
+| VLAN 30  | Voice                      | 
+| VLAN 99  | Trunk Native               |
 | VLAN 100 | Servers                    |
 | VLAN 999 | Isolated / Native / Unused |
 
