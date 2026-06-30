@@ -96,3 +96,11 @@ Configuration files are stored in the `configs` folder.
 - [SW-A Configuration](configs/SW-A.txt)
 - [SW-B Configuration](configs/SW-B.txt)
 - [R-ISP Configuration](configs/R-ISP.txt)
+
+## Verification
+
+Verification commands and test results are documented in [verification.md](verification.md)
+
+## Notes
+
+This lab is for learning and documentation purposes. Passwords, hashes, serial numbers, and sensitive values were removed before publishing.  
