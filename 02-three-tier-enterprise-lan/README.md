@@ -18,22 +18,16 @@ The lab focuses on building a scalable enterprise LAN design with redundant gate
 
 ## Technologies Practiced
 
-* Cisco IOS device hardening
 * SSH management access
 * CDP and LLDP
 * VLANs and 802.1Q trunks
 * VTP transparent/off mode
-* EtherChannel with LACP
 * Port Security
 * Voice VLAN preparation
 * Rapid-PVST
-* HSRP gateway redundancy
 * Layer 3 routed ports
 * OSPF Area 0
 * Passive OSPF interfaces
-* DHCP server and DHCP relay
-* NTP
-* NAT overload/PAT
 * Static default route
 * Management ACLs
 
@@ -42,15 +36,11 @@ The lab focuses on building a scalable enterprise LAN design with redundant gate
 1. Build a three-tier LAN using Core, Distribution, and Access layers.
 2. Segment the network using VLANs for management, data, servers, and isolated devices.
 3. Configure trunk links between Access and Distribution switches.
-4. Use EtherChannel to bundle redundant Layer 2 links.
-5. Configure Rapid-PVST and define STP root priorities.
-6. Configure HSRP to provide redundant default gateways.
-7. Use routed ports between Distribution and Core layers.
-8. Advertise internal networks using OSPF Area 0.
-9. Use passive interfaces to prevent unnecessary OSPF hellos toward end-user VLANs.
-10. Configure DHCP services and DHCP relay.
-11. Configure NAT overload for internet access.
-12. Restrict SSH access to network devices using management ACLs.
+4. Configure Rapid-PVST and define STP root priorities.
+5. Use routed ports between Distribution and Core layers.
+6. Advertise internal networks using OSPF Area 0.
+7. Use passive interfaces to prevent unnecessary OSPF hellos toward end-user VLANs.
+8. Restrict SSH access to network devices using management ACLs.
 
 ## VLAN Summary
 
