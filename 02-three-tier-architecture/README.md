@@ -6,6 +6,8 @@ This lab builds a three-tier enterprise network (Core, Distribution, and Access 
 
 ## Topology
 
+![Topology Diagram](./topology.png)
+
 **Core Layer:** C-SW-1 and C-SW-2, each with a full-mesh of routed links to both Distribution switches, and an uplink toward the Internet edge with HSRP.
 
 **Distribution Layer:** D-SW-1 and D-SW-2, redundantly connected to both Core switches and to each other, aggregating the Access layer.
