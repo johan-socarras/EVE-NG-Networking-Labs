@@ -4,7 +4,7 @@
 
 This lab simulates a three-tier enterprise LAN design using Core, Distribution, and Access layers in EVE-NG.
 
-The goal is to practice enterprise switching, VLAN segmentation, routing, ACLs, static inter-site connectivity, and secure device management through a CCNA/CCNP-style practical exercise.
+The goal is to practice enterprise switching, VLAN segmentation, routing, ACLs, static inter-site connectivity, and SSH-based device management through a CCNA/CCNP-style practical exercise.
 
 ## Topology
 
@@ -52,11 +52,9 @@ The lab focuses on building a multi-site enterprise LAN design with routed uplin
 | VLAN 100 | Server VLAN — defined and routed |
 | VLAN 999 | Isolated lab/test endpoints |
 
-```
 The `SRV-*` test endpoints shown in the captured verification outputs are connected to VLAN 999 and are used to test isolated-segment routing and ACL behavior.
 
 VLAN 100 is defined and routed, but no endpoint connected to VLAN 100 is demonstrated in the captured tests. VLAN 99, not VLAN 999, is used as the native VLAN on trunk links.
-```
 
 ## Routing Design
 
