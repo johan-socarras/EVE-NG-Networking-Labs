@@ -131,6 +131,14 @@ Both Core switches use a default route toward the simulated Internet node:
 ```cisco
 ip route 0.0.0.0 0.0.0.0 192.168.116.2
 ```
+### Return Route from the Simulated Internet Node
+
+The simulated Internet node uses the HSRP virtual IP as the next hop for traffic returning toward the internal networks.
+
+```text
+Destination: 10.0.0.0/8
+Next hop: 192.168.116.101
+```
 
 The default route is advertised into OSPF so that the Distribution layer can reach the simulated Internet segment.
 
