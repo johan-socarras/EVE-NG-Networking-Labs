@@ -165,4 +165,6 @@ Verification commands and test results are documented in [verification.md](verif
 
 ## Notes
 
-This lab is for learning and documentation purposes. Passwords, hashes, serial numbers, and sensitive values were removed before publishing.  
+This project was built for learning and technical documentation purposes in an isolated EVE-NG environment.
+
+The use of simulated public addresses does not represent communication with real public systems. All configurations were sanitized before publication. 
