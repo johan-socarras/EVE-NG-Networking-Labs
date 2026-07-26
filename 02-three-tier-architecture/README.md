@@ -141,7 +141,7 @@ The lab includes:
 - A routed Layer 3 link between the Distribution switches
 - A separate 802.1Q trunk between the Distribution switches
 - Dual uplinks from each Access switch
-- HSRP gateway redundancy
+- HSRP next-hop redundancy on the simulated Internet-facing segment
 - OSPF dynamic routing
 
 The design provides alternate paths after routed-link or Access-uplink failures. HSRP also preserves the shared Core-side address if one Core switch becomes unavailable. Internal VLAN gateway redundancy is outside the scope of this implementation.
@@ -171,7 +171,13 @@ The design provides alternate paths after routed-link or Access-uplink failures.
 6. Configure HSRP toward the simulated Internet edge.
 7. Verify inter-VLAN connectivity.
 8. Verify end-to-end network connectivity.
-9. Test link and device redundancy.
+9. Test routed-link, Access-uplink, and Core-side HSRP failover.
+
+## IP Addressing Plan
+
+The complete IP addressing and interface plan is documented here:
+
+[View IP Addressing Plan](addressing-plan.md)
 
 ## Configuration Files
 
@@ -212,6 +218,6 @@ All addressing and network scenarios are used for lab and documentation purposes
 
 ## Final Result
 
-The lab demonstrates a redundant three-tier enterprise architecture using Layer 3 routing, VLAN segmentation, HSRP, OSPF, and multiple network paths.
+The lab demonstrates a three-tier enterprise architecture using Layer 3 routing, VLAN segmentation, OSPF, Rapid-PVST, redundant uplinks, and HSRP on the simulated Internet-facing segment.
 
-The design provides gateway redundancy, dynamic route recovery, and resilient connectivity between the Core, Distribution, and Access layers.
+The design provides dynamic route recovery, Access-uplink redundancy, and a redundant next-hop address for return traffic through the Core layer. Internal VLAN gateway redundancy is outside the scope of this implementation.
