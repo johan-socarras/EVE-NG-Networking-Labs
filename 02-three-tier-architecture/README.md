@@ -9,7 +9,7 @@ The design focuses on:
 - Layer 3 redundancy
 - Redundant uplinks
 - VLAN segmentation
-- HSRP gateway redundancy
+- HSRP redundancy on the simulated Internet-facing segment
 - OSPF dynamic routing
 - High availability
 - Network troubleshooting and verification
@@ -112,13 +112,18 @@ OSPF is used to advertise:
 
 The routed design reduces Layer 2 failure domains and provides multiple paths between the Core and Distribution layers.
 
-## Gateway Redundancy
+## HSRP Implementation
 
-HSRP is used to provide redundant default gateways.
+HSRP is implemented exclusively on the Core switches on the segment facing the simulated Internet node.
 
-At the Distribution layer, the switches provide virtual gateway addresses for the user VLANs.
+The virtual IP `192.168.116.101` provides a shared and redundant Core-side address. The simulated Internet node can use this virtual address as the next hop for routes returning toward the internal network.
 
-At the Core layer, HSRP provides a shared redundant IP address on the segment facing the simulated Internet node. This lab-specific placement differs from the more common use of HSRP as an end-user default gateway.
+HSRP is not used as the default gateway mechanism for the internal user VLANs. The VLAN gateway responsibilities are distributed between the two Distribution switches:
+
+- `D-SW-1` provides the gateways for VLANs 10 and 30.
+- `D-SW-2` provides the gateways for VLANs 20 and 40.
+
+This placement was selected intentionally for the simulated topology and differs from the typical campus design where HSRP is commonly deployed on user VLAN interfaces.
 
 ## Redundancy Design
 
@@ -157,11 +162,10 @@ The design allows traffic to use alternate paths when a network link or device b
 3. Establish OSPF neighbor relationships.
 4. Advertise loopbacks, transit networks, and VLAN networks through OSPF.
 5. Configure redundant uplinks between the Access and Distribution layers.
-6. Configure HSRP for user VLAN gateways.
-7. Configure HSRP toward the simulated Internet edge.
-8. Verify inter-VLAN connectivity.
-9. Verify end-to-end network connectivity.
-10. Test link and device redundancy.
+6. Configure HSRP toward the simulated Internet edge.
+7. Verify inter-VLAN connectivity.
+8. Verify end-to-end network connectivity.
+9. Test link and device redundancy.
 
 ## Configuration Files
 
