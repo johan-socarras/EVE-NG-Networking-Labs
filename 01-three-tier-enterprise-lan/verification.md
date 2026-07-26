@@ -9,7 +9,7 @@
 | Layer 3 interfaces | Routed links are operational with the expected IP addressing | Passed |
 | OSPF | Neighbor adjacencies form and internal routes are learned dynamically | Passed |
 | Inter-VLAN and inter-site routing | Internal networks can communicate according to the lab design | Passed |
-| End-to-end connectivity | Clients and servers can reach the required internal and external destinations | Passed |
+| Documented ICMP reachability | Captured ICMP tests succeed between the isolated lab endpoints at different sites | Passed |
 
 The detailed command outputs and test results for each verification area are provided in the sections below.
 
@@ -776,7 +776,7 @@ Routing Protocol is "ospf 1"
 
 Status: Passed
 
-## 5. Inter-Site Connectivity Tests
+## 5. Inter-Site ICMP Reachability Tests
 
 Test from Data Center to Site-A:
 
@@ -817,9 +817,11 @@ SRV-A-01> ping 10.2.99.10
 
 Expected result:
 
-* Devices in different sites should be able to reach each other according to the routing design.
+* ICMP should succeed between the isolated lab endpoints because the VLAN 999 ACL explicitly permits ICMP.
+* These tests verify routing and return-path reachability.
+* These ping results do not demonstrate unrestricted TCP or UDP connectivity between the isolated VLANs.
 
-Status: Passed
+Status: Passed for the documented ICMP tests
 
 ## 6. Default Route Verification
 
@@ -860,7 +862,7 @@ Routing entry for 0.0.0.0/0, supernet
 
 Expected result:
 
-* Core switches should have a default route pointing toward the upstream router.
+* Each multilayer switch should have a static default route pointing toward its local site router.
 
 Status: Passed
 
@@ -937,13 +939,21 @@ end
 
 Expected result:
 
-* VLAN 999 should be restricted by ACL.
-* The isolated VLAN should not have unrestricted access to internal private networks.
-* Allowed traffic should work according to the ACL design.
+* The `Vlan999_Isolated` ACL should exist on each multilayer switch.
+* The ACL should be applied inbound on interface VLAN 999.
+* ICMP is explicitly permitted.
+* Non-ICMP IP traffic toward the listed private address ranges is denied.
+* The captured outputs verify the ACL configuration; a denied TCP or UDP traffic test was not captured.
 
-Status: Passed
+Status: ACL configuration verified
 
 ## 8. SSH Management Verification
+
+```
+This captured verification demonstrates SSH operation on `CSW-DC-01` as a representative multilayer switch.
+
+The published Access-switch configurations do not include management SVIs or default gateways, so remote SSH management of the Access switches is outside the documented scope.
+```
 
 Commands used:
 
@@ -980,78 +990,25 @@ Expected result:
 * VTY lines should use local login.
 * Remote access should be limited to SSH.
 
-Status: Passed
+Status: Passed for the demonstrated multilayer switch
 
-## 9. Port Security / Access Port Verification
+## 9. Final Result
 
-Commands used:
-
-```cisco
-show port-security
-show port-security interface gigabitEthernet0/1
-show interfaces status
-```
-
-Verifications:
-
-```cisco
-ASW-DC-01#show port-security interface g0/1
-Port Security              : Enabled
-Port Status                : Secure-up
-Violation Mode             : Restrict
-Aging Time                 : 0 mins
-Aging Type                 : Absolute
-SecureStatic Address Aging : Disabled
-Maximum MAC Addresses      : 2
-Total MAC Addresses        : 0
-Configured MAC Addresses   : 0
-Sticky MAC Addresses       : 0
-Last Source Address:Vlan   : 0000.0000.0000:0
-Security Violation Count   : 0
-ASW-DC-01#show port-security
-Secure Port  MaxSecureAddr  CurrentAddr  SecurityViolation  Security Action
-                (Count)       (Count)          (Count)
----------------------------------------------------------------------------
-      Gi0/1              1            0                  0         Restrict
----------------------------------------------------------------------------
-Total Addresses in System (excluding one mac per port)     : 0
-Max Addresses limit in System (excluding one mac per port) : 4096
-ASW-DC-01#show interfaces status
-
-Port      Name               Status       Vlan       Duplex  Speed Type
-Gi0/0     to CSW-DC-01       connected    trunk      a-full   auto RJ45
-Gi0/1     to SRV-DC-01       connected    999        a-full   auto RJ45
-Gi0/2                        disabled     1            auto   auto RJ45
-Gi0/3                        disabled     1            auto   auto RJ45
-Gi1/0                        disabled     1            auto   auto RJ45
-Gi1/1                        disabled     1            auto   auto RJ45
-Gi1/2                        disabled     1            auto   auto RJ45
-Gi1/3                        disabled     1            auto   auto RJ45
-```
-
-Expected result:
-
-* Access ports should be assigned to the correct VLAN.
-* PortFast and BPDU Guard should be enabled on end-device ports.
-* Port security should match the lab requirements if configured.
-
-Status: Passed
-
-## 10. Final Result
-
-The lab successfully verifies:
+The captured verification outputs demonstrate:
 
 * VLAN segmentation
 * 802.1Q trunking
 * Native VLAN 99
-* Rapid-PVST
+* Rapid-PVST operation
+* PortFast and BPDU Guard on demonstrated end-device ports
 * Layer 3 routed links
 * Inter-VLAN routing
-* OSPF routing in the Data Center segment
-* Static routing between sites
-* VLAN 999 filtering
-* Default routing
-* SSH-based management access
+* OSPF adjacencies between each site router and its local multilayer switch
+* Static routing between site routers
+* Static default routes on the multilayer switches
+* Inter-site ICMP reachability
+* VLAN 999 ACL configuration
+* SSH operation on the demonstrated multilayer switch
 * Basic enterprise LAN troubleshooting
 
-Final status: Passed
+Final status: Passed for the documented tests
