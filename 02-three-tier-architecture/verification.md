@@ -73,6 +73,7 @@ Expected result:
 ## 2. VLAN Verification
 
 Run on the Distribution and Access switches:
+
 ```cisco
 show vlan brief
 ```
@@ -89,6 +90,7 @@ Expected VLAN placement:
 | A-SW-4 |	40 |
 
 Expected result:
+
 - The VLANs appear as active.
 - Each user-facing interface belongs to its assigned VLAN.
 
@@ -140,6 +142,7 @@ This command confirms the administrative and operational switchport modes.
 ## 4. Spanning Tree Verification
 
 Run on the Distribution and Access switches:
+
 ```cisco
 show spanning-tree root
 ```
@@ -154,12 +157,14 @@ Expected root placement:
 | VLAN 40 |	`D-SW-2` |
 
 Run on each Access switch:
+
 ```cisco
 show spanning-tree vlan 10
 show spanning-tree vlan 20
 show spanning-tree vlan 30
 show spanning-tree vlan 40
 ```
+
 Use only the command corresponding to the VLAN assigned to that switch.
 
 Expected result:
@@ -172,6 +177,7 @@ Expected result:
 ## 5. Layer 3 Transit Verification
 
 Run on all Core and Distribution switches:
+
 ```cisco
 show ip interface brief
 show interfaces description
@@ -191,11 +197,14 @@ Expected routed connections:
 Test each directly connected neighbor with `ping`.
 
 Example from C-SW-1:
+
 ```cisco
 ping 10.0.0.2
 ping 10.0.0.6
 ```
+
 Expected result:
+
 ```
 Success rate is 100 percent
 ```
@@ -203,9 +212,11 @@ Success rate is 100 percent
 ## 6. OSPF Neighbor Verification
 
 Run:
+
 ```cisco
 show ip ospf neighbor
 ```
+
 Expected neighbor relationships:
 
 | Device |	Expected OSPF Neighbors |
@@ -230,6 +241,7 @@ Router IDs:
 | D-SW-2 |	10.222.0.4 |
 
 Additional commands:
+
 ```cisco
 show ip ospf interface brief
 show ip protocols
@@ -238,10 +250,12 @@ show ip protocols
 ## 7. Routing Table Verification
 
 Run:
+
 ```cisco
 show ip route
 show ip route ospf
 ```
+
 Expected result:
 
 - Core switches learn the user VLAN networks through OSPF.
@@ -250,14 +264,17 @@ Expected result:
 - Multiple equal-cost routes may appear when redundant paths are available.
 
 Verify the default route on Distribution:
+
 ```cisco
 show ip route 0.0.0.0
 ```
+
 Expected result:
 
 - An OSPF external default route points toward the Core layer.
 
 Verify loopback reachability:
+
 ```cisco
 ping 10.222.0.1
 ping 10.222.0.2
@@ -270,9 +287,11 @@ ping 10.222.0.4
 HSRP is implemented only on the Core interfaces facing the simulated Internet segment.
 
 Run on both Core switches:
+
 ```cisco
 show standby brief
 ```
+
 Expected result:
 
 | Device |	State |	Physical IP |	Virtual IP |
@@ -283,6 +302,7 @@ Expected result:
 C-SW-1 should become Active because it has the higher HSRP priority.
 
 Detailed verification:
+
 ```cisco
 show standby
 ```
@@ -309,15 +329,19 @@ Example end-device addressing:
 Test each local gateway first.
 
 From PC-1:
+
 ```cisco
 ping 10.10.10.1
 ```
+
 Then test communication between VLANs:
+
 ```cisco
 ping 10.10.20.100
 ping 10.10.30.100
 ping 10.10.40.100
 ```
+
 Expected result:
 
 - The local default gateway responds.
@@ -336,6 +360,7 @@ Next hop: 192.168.116.101
 This route allows return traffic to reach the internal lab networks through the active HSRP Core switch.
 
 From each Core switch:
+
 ```cisco
 ping 192.168.116.2
 ```
@@ -344,13 +369,17 @@ Expected result:
 - Both Core switches can reach the simulated Internet node.
 
 From the Distribution switches:
+
 ```cisco
 ping 192.168.116.2
 ```
+
 From each end device:
+
 ```cisco
 ping 192.168.116.2
 ```
+
 Expected result:
 
 - Internal traffic follows the OSPF default route toward the Core layer.
@@ -361,22 +390,28 @@ Expected result:
 Generate continuous traffic between an internal host and a remote destination.
 
 Example:
+
 ```cisco
 ping 192.168.116.2
 ```
+
 Disable one Core-to-Distribution link.
 
 Example:
+
 ```cisco
 interface GigabitEthernet0/1
  shutdown
 ```
+
 Verify:
+
 ```cisco
 show ip ospf neighbor
 show ip route
 traceroute 192.168.116.2
 ```
+
 Expected result:
 
 - The OSPF adjacency on the disabled link goes down.
@@ -385,10 +420,12 @@ Expected result:
 - Connectivity resumes after convergence.
 
 Restore the interface:
+
 ```cisco
 interface GigabitEthernet0/1
  no shutdown
 ```
+
 ## 12. Access Uplink Failover Test
 
 Generate continuous traffic from an Access-layer host.
@@ -429,6 +466,7 @@ Expected result:
 - No switching loop occurs.
 
 Restore the interface:
+
 ```cisco
 interface <FORWARDING_UPLINK>
  no shutdown
@@ -437,14 +475,18 @@ interface <FORWARDING_UPLINK>
 ## 13. HSRP Failover Test
 
 While continuously pinging the HSRP virtual IP or another reachable address, disable the Internet-facing interface on C-SW-1:
+
 ```cisco
 interface GigabitEthernet0/0
  shutdown
 ```
+
 Run on C-SW-2:
+
 ```cisco
 show standby brief
 ```
+
 Expected result:
 
 - C-SW-2 transitions from Standby to Active.
@@ -452,10 +494,12 @@ Expected result:
 - The interruption is limited to the HSRP convergence period.
 
 Restore C-SW-1:
+
 ```cisco
 interface GigabitEthernet0/0
  no shutdown
 ```
+
 Because preemption is enabled and C-SW-1 has a higher priority, it should regain the Active role.
 
 ## 14. Useful Troubleshooting Commands
