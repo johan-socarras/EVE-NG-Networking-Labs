@@ -138,7 +138,7 @@ The lab includes:
 - HSRP gateway redundancy
 - OSPF dynamic routing
 
-The design allows traffic to use alternate paths when a network link or device becomes unavailable.
+The design provides alternate paths after routed-link or Access-uplink failures. HSRP also preserves the shared Core-side address if one Core switch becomes unavailable. Internal VLAN gateway redundancy is outside the scope of this implementation.
 
 ## Technologies Practiced
 
