@@ -322,9 +322,18 @@ Expected result:
 
 - The local default gateway responds.
 - Hosts in different VLANs communicate successfully.
-- Traffic is routed through the Distribution and Core topology as required.
+- Traffic is routed at the Distribution layer. Under normal conditions, traffic between VLANs hosted on different Distribution switches uses the direct Layer 3 interconnection. OSPF can provide an alternate path through the Core layer if that link fails.
 
 ## 10. Simulated Internet Connectivity
+
+Before testing connectivity, confirm that the simulated Internet node has the following return route:
+
+```text
+Destination: 10.0.0.0/8
+Next hop: 192.168.116.101
+```
+
+This route allows return traffic to reach the internal lab networks through the active HSRP Core switch.
 
 From each Core switch:
 ```cisco
@@ -384,17 +393,34 @@ interface GigabitEthernet0/1
 
 Generate continuous traffic from an Access-layer host.
 
-Disable the forwarding uplink on the corresponding Access switch:
+Identify the current forwarding uplink:
+
 ```cisco
-interface GigabitEthernet0/0
+show spanning-tree vlan <VLAN_ID>
+```
+
+Expected forwarding uplinks under normal conditions:
+
+| Access Switch | VLAN | Expected Forwarding Uplink | Root Bridge |
+|---|---:|---|---|
+| `A-SW-1` | 10 | `GigabitEthernet0/0` | `D-SW-1` |
+| `A-SW-2` | 20 | `GigabitEthernet0/1` | `D-SW-2` |
+| `A-SW-3` | 30 | `GigabitEthernet0/0` | `D-SW-1` |
+| `A-SW-4` | 40 | `GigabitEthernet0/1` | `D-SW-2` |
+
+Disable the interface currently operating as the forwarding uplink:
+
+```cisco
+interface <FORWARDING_UPLINK>
  shutdown
 ```
+
 Verify:
+
 ```cisco
-show spanning-tree vlan 10
+show spanning-tree vlan <VLAN_ID>
 show interfaces trunk
 ```
-Use the VLAN number assigned to the Access switch being tested.
 
 Expected result:
 
@@ -404,7 +430,7 @@ Expected result:
 
 Restore the interface:
 ```cisco
-interface GigabitEthernet0/0
+interface <FORWARDING_UPLINK>
  no shutdown
 ```
 
