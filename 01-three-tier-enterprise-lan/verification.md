@@ -7,8 +7,8 @@
 | VLANs and 802.1Q trunks | Required VLANs exist and trunk links carry the correct VLANs | Passed |
 | Rapid-PVST | Spanning Tree operates correctly and root bridge placement matches the design | Passed |
 | Layer 3 interfaces | Routed links are operational with the expected IP addressing | Passed |
-| OSPF | Neighbor adjacencies form and internal routes are learned dynamically | Passed |
-| Inter-VLAN and inter-site routing | Internal networks can communicate according to the lab design | Passed |
+| Data Center OSPF | `RTR-DC-01` and `CSW-DC-01` form a FULL adjacency and exchange local VLAN routes | Passed |
+| Routing tables | Captured tables contain connected VLANs, OSPF-learned local-site routes, static inter-site routes, and static default routes | Passed |
 | Documented ICMP reachability | Captured ICMP tests succeed between the isolated lab endpoints at different sites | Passed |
 
 The detailed command outputs and test results for each verification area are provided in the sections below.
@@ -655,10 +655,10 @@ show ip protocols
 
 Expected result:
 
-* OSPF neighbors should form between Layer 3 devices.
-* Remote site networks should appear in the routing table as OSPF routes.
-* User/server VLANs should be advertised into OSPF.
-* End-user VLAN interfaces should be passive when appropriate.
+* An OSPF adjacency should form between each site router and its local multilayer switch.
+* Local VLAN networks should be advertised from the multilayer switch toward its local router.
+* Inter-site networks are reached through static routes on the site routers, not through OSPF.
+* In the current implementation, the VLAN interfaces participate in OSPF and are not configured as passive interfaces.
 
 Verifications:
 
@@ -949,11 +949,9 @@ Status: ACL configuration verified
 
 ## 8. SSH Management Verification
 
-```
 This captured verification demonstrates SSH operation on `CSW-DC-01` as a representative multilayer switch.
 
 The published Access-switch configurations do not include management SVIs or default gateways, so remote SSH management of the Access switches is outside the documented scope.
-```
 
 Commands used:
 
@@ -994,16 +992,17 @@ Status: Passed for the demonstrated multilayer switch
 
 ## 9. Final Result
 
-The captured verification outputs demonstrate:
+The published configurations and captured verification outputs document:
 
 * VLAN segmentation
 * 802.1Q trunking
 * Native VLAN 99
 * Rapid-PVST operation
-* PortFast and BPDU Guard on demonstrated end-device ports
+* PortFast and BPDU Guard on configured end-device ports
 * Layer 3 routed links
-* Inter-VLAN routing
-* OSPF adjacencies between each site router and its local multilayer switch
+* Inter-VLAN routing configuration
+* OSPF configuration within each site
+* A captured FULL OSPF adjacency in the Data Center segment
 * Static routing between site routers
 * Static default routes on the multilayer switches
 * Inter-site ICMP reachability
