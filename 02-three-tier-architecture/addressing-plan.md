@@ -128,12 +128,12 @@ The placement was selected specifically for the requirements of this simulated t
 
 OSPF process 1 advertises:
 
-`10.222.0.0/24` loopback range
-`10.0.0.0/24` transit-link range
-`10.10.10.0/24`
-`10.10.20.0/24`
-`10.10.30.0/24`
-`10.10.40.0/24`
+- `10.222.0.0/24` loopback address range
+- `10.0.0.0/24` transit-link address range
+- `10.10.10.0/24`
+- `10.10.20.0/24`
+- `10.10.30.0/24`
+- `10.10.40.0/24`
 
 The loopback addresses are used as manually configured OSPF router IDs.
 
@@ -157,12 +157,12 @@ The default route is advertised into OSPF so that the Distribution layer can rea
 
 ## Addressing Summary
 
-| Address Range |	Purpose |
+| Address Range | Purpose |
 |---|---|
-| 10.222.0.0/24	| Loopback interfaces |
-| 10.0.0.0/24 |	Layer 3 transit links |
-| 10.10.10.0/24 |	VLAN 10 |
-| 10.10.20.0/24 |	VLAN 20 |
-| 10.10.30.0/24 |	VLAN 30 |
-| 10.10.40.0/24 |	VLAN 40 |
-| 192.168.116.0/24 |	Simulated Internet-facing segment |
+| `10.222.0.0/24` | Loopback interfaces |
+| `10.0.0.0/24` | Layer 3 transit links |
+| `10.10.10.0/24` | VLAN 10 |
+| `10.10.20.0/24` | VLAN 20 |
+| `10.10.30.0/24` | VLAN 30 |
+| `10.10.40.0/24` | VLAN 40 |
+| `192.168.116.0/24` | Simulated Internet-facing segment |
