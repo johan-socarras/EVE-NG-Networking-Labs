@@ -1,0 +1,55 @@
+!
+! C-SW-2 - Sanitized Device Configuration
+!
+hostname C-SW-2
+!
+no ip domain-lookup
+ip routing
+!
+interface Loopback0
+ description OSPF_ROUTER_ID
+ ip address 10.222.0.2 255.255.255.255
+!
+interface GigabitEthernet0/0
+ description INTERNET_FACING_SEGMENT
+ no switchport
+ ip address 192.168.116.103 255.255.255.0
+ standby version 2
+ standby 116 ip 192.168.116.101
+ standby 116 priority 100
+ standby 116 preempt
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description L3_LINK_TO_D-SW-1
+ no switchport
+ ip address 10.0.0.9 255.255.255.252
+ ip ospf 1 area 0
+ no shutdown
+!
+interface GigabitEthernet0/2
+ description L3_LINK_TO_D-SW-2
+ no switchport
+ ip address 10.0.0.13 255.255.255.252
+ ip ospf 1 area 0
+ no shutdown
+!
+router ospf 1
+ router-id 10.222.0.2
+ passive-interface default
+ no passive-interface GigabitEthernet0/1
+ no passive-interface GigabitEthernet0/2
+ network 10.222.0.2 0.0.0.0 area 0
+ default-information originate
+!
+ip route 0.0.0.0 0.0.0.0 192.168.116.2
+!
+line console 0
+ logging synchronous
+ exec-timeout 0 0
+!
+line vty 0 4
+ login local
+ transport input ssh
+!
+end
