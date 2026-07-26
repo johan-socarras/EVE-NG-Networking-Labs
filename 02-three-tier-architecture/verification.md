@@ -15,7 +15,9 @@ The verification process covers:
 - HSRP on the Internet-facing segment
 - Inter-VLAN communication
 - End-to-end connectivity
-- Link and device failover
+- Routed-link failover
+- Access-uplink failover
+- Core-side HSRP failover
 
 ## Verification Summary
 
@@ -55,7 +57,7 @@ Expected result:
 - The Internet-facing interfaces on both Core switches are up/up.
 - Required VLAN interfaces are up/up.
 
-## Access switches
+### Access switches
 
 Run:
 ```cisco
@@ -92,6 +94,26 @@ Expected result:
 
 ## 3. Trunk Verification
 
+### Access-to-Distribution Trunks
+
+Run on each Access switch:
+
+```cisco
+show interfaces trunk
+```
+Expected result:
+
+- Both uplinks operate as 802.1Q trunks.
+- Each trunk carries the VLAN assigned to that Access switch.
+- One uplink may be forwarding while the other is blocked by Rapid-PVST.
+  
+| Access Switch |	Allowed VLAN |
+|---|---|
+| A-SW-1 |	VLAN 10 |
+| A-SW-2 |	VLAN 20 |
+| A-SW-3 |	VLAN 30 |
+| A-SW-4 |	VLAN 40 |
+ 
 ### Distribution-to-Distribution Trunk
 
 Run on both Distribution switches:
