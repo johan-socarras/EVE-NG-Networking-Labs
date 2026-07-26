@@ -1,34 +1,41 @@
-# ASA Destination NAT Lab for Movable Server-A
+# Cisco ASA Destination NAT and ACL Lab
 
-##Objective
+## Objective
 
-This lab was created to demonstrate how a Cisco ASA can be configured to allow an external client to reach an internal server using a fixed destination IP address, even when the real server is moved between different sites.
+This lab demonstrates how a Cisco ASA can allow an external client to reach an internal server through a fixed destination IP address, even when the server moves between two internal sites.
 
-The main requirement is that any client behind R-Client should be able to reach 8.8.8.8 using ICMP, SSH, or HTTPS. The ASA translates that destination IP to the current real IP address of Server-A, depending on where the server is located.
+Clients behind `R-Client` always connect to `8.8.8.8` using ICMP, SSH, or HTTPS. The ASA translates that destination address to the current real IP address of `Server-A`.
 
-Business Scenario
+## Business Scenario
 
-A network engineer requested a lab example showing how the ASA configuration would work before applying a similar design in a real environment.
+A network engineer requested a lab example showing how the ASA configuration would operate before applying a similar design in a real environment.
 
-##The company has two internal sites:
+The company has two internal sites:
 
-- Site-A: 192.168.1.0/24
-- Site-B: 10.100.100.0/24
+- **Site-A:** `192.168.1.0/24`
+- **Site-B:** `10.100.100.0/24`
 
-##Server-A can be located in either site:
+`Server-A` can be located in either site:
 
-- Server-A in Site-A: 192.168.1.10
-- Server-A in Site-B: 10.100.100.10
+- **Site-A address:** `192.168.1.10`
+- **Site-B address:** `10.100.100.10`
 
-External clients should not need to know the real IP address of Server-A. They should always connect to the same destination IP: 8.8.8.8.
+External clients do not need to know the current real IP address of `Server-A`. They always connect to the same destination address:
 
-##Lab Goals
+```text
+8.8.8.8
+```
 
-- Site-A and Site-B must be able to communicate with each other.
-- Both sites must have connectivity to the external server network 4.4.4.0/29.
-- Clients behind R-Client must be able to reach 8.8.8.8 using ICMP, SSH, or HTTPS.
-- The ASA must translate traffic destined to 8.8.8.8 into Server-A's current real IP address.
-- If Server-A is moved from one site to the other, only the ASA SERVER_A object needs to be updated.
+Lab note: The address 8.8.8.8 is used only as a simulated destination inside the isolated EVE-NG environment. It does not represent communication with the real public service associated with that address.
+
+Lab Goals
+- Establish connectivity between Site-A and Site-B.
+- Provide both internal sites with connectivity to the external server network 4.4.4.0/29.
+- Allow clients behind R-Client to reach 8.8.8.8 using ICMP, SSH, and HTTPS.
+- Configure the ASA to translate traffic destined for 8.8.8.8 to the current real IP address of Server-A.
+- Maintain the same external destination address when Server-A moves between sites.
+- Require only the ASA SERVER_A network object to be updated when the server changes location.
+- Verify routing, NAT, ACL, and end-to-end connectivity.
 
 ## Topology
 
@@ -36,13 +43,15 @@ External clients should not need to know the real IP address of Server-A. They s
 
 ## Network Summary
 
-- Site-A LAN: 192.168.1.0/24
-- Site-B LAN: 10.100.100.0/24
-- ASA outside network: 203.0.113.0/30
-- ASA inside network: 192.0.2.0/30
-- Site-A to Site-B transit: 192.0.2.4/30
-- Site-B to ISP transit: 192.0.2.8/30
-- ISP server network: 4.4.4.0/29
+| Purpose | Network |
+|---|---|
+| Site-A LAN | 192.168.1.0/24 |
+| Site-B LAN | 10.100.100.0/24 |
+| ASA outside network | 203.0.113.0/30 |
+| ASA inside network | 192.0.2.0/30 |
+| Site-A to Site-B transit | 192.0.2.4/30 |
+| Site-B to ISP transit | 192.0.2.8/30 |
+| ISP server network | 4.4.4.0/29 |
 
 ## Devices
 
@@ -56,7 +65,7 @@ External clients should not need to know the real IP address of Server-A. They s
 | PC-A | Site-A client |
 | Server-A | Site-B internal server |
 | Server-B | Site-B internal server |
-| Server | External server |
+| Server | Simulated external server |
 
 ## IP Addressing
 
@@ -77,15 +86,66 @@ External clients should not need to know the real IP address of Server-A. They s
 | Server-B | eth0 | 10.100.100.11/24 | Site-B server |
 | Server | eth0 | 4.4.4.4/29 | External server |
 
-## Technologies Practiced
+## Traffic Flow
 
-- Cisco IOS basic configuration
-- Cisco ASA basic configuration
-- Static routing or dynamic routing
-- Firewall ACLs
-- NAT
+When an external client sends traffic to 8.8.8.8, the ASA performs destination NAT and translates the destination to the current real address of Server-A.
+
+## Server-A in Site-A
+
+```
+External client
+      |
+      v
+   8.8.8.8
+      |
+      v
+Cisco ASA destination NAT
+      |
+      v
+192.168.1.10
+```
+
+## Server-A in Site-B
+
+```
+External client
+      |
+      v
+   8.8.8.8
+      |
+      v
+Cisco ASA destination NAT
+      |
+      v
+10.100.100.10
+```
+
+The client continues using 8.8.8.8 in both cases. Only the ASA SERVER_A object is updated when the server changes location.
+
+## Technologies Practiced
+- Cisco IOS configuration
+- Cisco ASA configuration
+- Destination NAT
+- Network objects
+- Access control lists
+- Static and dynamic routing
+- OSPF verification
 - Inter-site connectivity
+- Firewall traffic control
+- ICMP, SSH, and HTTPS access
 - Network troubleshooting
+- NAT and connection-table verification
+
+## Security Policy
+
+The ASA outside ACL permits only the traffic required by the lab:
+- ICMP
+- SSH
+- HTTPS
+
+Other traffic is not part of the permitted test scenario.
+
+This restricted ACL also explains why a standard Cisco IOS traceroute does not return hop information. Cisco IOS normally uses UDP high ports for traceroute, and those ports are not permitted by the outside ACL.
 
 ## Configuration Files
 
@@ -96,6 +156,8 @@ Configuration files are stored in the `configs` folder.
 - [SW-A Configuration](configs/SW-A.txt)
 - [SW-B Configuration](configs/SW-B.txt)
 - [R-ISP Configuration](configs/R-ISP.txt)
+
+Passwords, hashes, serial numbers, and other sensitive values have been removed or changed.
 
 ## Verification
 
