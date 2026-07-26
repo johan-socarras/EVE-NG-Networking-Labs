@@ -14,7 +14,7 @@ The goal is to practice enterprise switching, VLAN segmentation, high availabili
 
 The network is divided into multiple sites and VLANs. Each site uses separate VLANs for management, data, servers, and isolated traffic.
 
-The lab focuses on building a scalable enterprise LAN design with redundant gateways, routed uplinks, dynamic routing, and controlled management access.
+The lab focuses on building a scalable enterprise LAN design with routed uplinks, dynamic routing, and controlled management access.
 
 ## Technologies Practiced
 
@@ -37,7 +37,6 @@ The lab focuses on building a scalable enterprise LAN design with redundant gate
 4. Configure Rapid-PVST and define STP root priorities.
 5. Use routed ports between Distribution and Core layers.
 6. Advertise internal networks using OSPF Area 0.
-7. Use passive interfaces to prevent unnecessary OSPF hellos toward end-user VLANs.
 
 ## VLAN Summary
 
@@ -56,20 +55,14 @@ The lab uses OSPF Area 0 between the Core and Distribution layers. Routed ports 
 
 This design keeps Layer 2 boundaries smaller and makes the core routing layer more scalable and stable.
 
-## High Availability
-
-Rapid-PVST is used to control Layer 2 path selection and avoid switching loops.
-
 ## Security Features
 
 The lab includes basic enterprise security practices:
 
 * SSH-only remote access
 * Local user authentication
-* Port Security on access ports
 * Native VLAN separation
 * Isolated VLAN for unused or restricted ports
-* ACL restricting SSH access to management networks only
 
 ## Configuration Files
 
