@@ -4,7 +4,7 @@
 
 This lab simulates a three-tier enterprise LAN design using Core, Distribution, and Access layers in EVE-NG.
 
-The goal is to practice enterprise switching, VLAN segmentation, high availability, routing, DHCP relay, NAT, ACLs, and basic infrastructure services based on a CCNA/CCNP-style practical exercise.
+The goal is to practice enterprise switching, VLAN segmentation, high availability, routing, ACLs, and basic infrastructure services based on a CCNA/CCNP-style practical exercise.
 
 ## Topology
 
