@@ -29,7 +29,7 @@ The Core layer contains two Layer 3 switches:
 
 Each Core switch connects to both Distribution switches through routed Layer 3 links.
 
-The Core switches also connect to the simulated Internet edge and use HSRP to provide gateway redundancy.
+The Core switches connect to the simulated Internet-facing segment and use HSRP to provide a redundant next-hop address for return traffic from the simulated Internet node.
 
 ### Distribution Layer
 
