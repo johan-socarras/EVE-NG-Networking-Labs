@@ -4,7 +4,7 @@
 
 This lab simulates a three-tier enterprise LAN design using Core, Distribution, and Access layers in EVE-NG.
 
-The goal is to practice enterprise switching, VLAN segmentation, high availability, routing, ACLs, and basic infrastructure services based on a CCNA/CCNP-style practical exercise.
+The goal is to practice enterprise switching, VLAN segmentation, routing, ACLs, static inter-site connectivity, and secure device management through a CCNA/CCNP-style practical exercise.
 
 ## Topology
 
@@ -14,20 +14,22 @@ The goal is to practice enterprise switching, VLAN segmentation, high availabili
 
 The network is divided into multiple sites and VLANs. Each site uses separate VLANs for management, data, servers, and isolated traffic.
 
-The lab focuses on building a scalable enterprise LAN design with routed uplinks, dynamic routing, and controlled management access.
+The lab focuses on building a multi-site enterprise LAN design with routed uplinks, local OSPF routing, static inter-site routing, VLAN segmentation, and controlled traffic from an isolated VLAN.
 
 ## Technologies Practiced
 
-* SSH management access
-* CDP and LLDP
+* SSH management on routers and multilayer switches
+* CDP
 * VLANs and 802.1Q trunks
-* VTP transparent/off mode
-* Port Security
+* VTP off mode
 * Voice VLAN preparation
 * Rapid-PVST
+* PortFast and BPDU Guard
 * Layer 3 routed ports
-* OSPF Area 0
-* Static default route
+* OSPF Area 0 within each site
+* Static inter-site routing
+* Static default routes
+* Extended ACL filtering
 
 ## Lab Goals
 
@@ -37,17 +39,24 @@ The lab focuses on building a scalable enterprise LAN design with routed uplinks
 4. Configure Rapid-PVST and define STP root priorities.
 5. Use routed ports between Distribution and Core layers.
 6. Advertise internal networks using OSPF Area 0.
-
+7. Configure static routes between the site routers and static default routes from the multilayer switches toward their local routers.
+   
 ## VLAN Summary
 
-| VLAN     | Purpose                    |
-| -------- | -------------------------- |
-| VLAN 10  | Management                 |
-| VLAN 20  | Data                       |
-| VLAN 30  | Voice                      | 
-| VLAN 99  | Trunk Native               |
-| VLAN 100 | Servers                    |
-| VLAN 999 | Isolated / Native / Unused |
+| VLAN | Purpose |
+| --- | --- |
+| VLAN 10 | Management |
+| VLAN 20 | Data |
+| VLAN 30 | Voice | 
+| VLAN 99 | Trunk Native |
+| VLAN 100 | Server VLAN — defined and routed |
+| VLAN 999 | Isolated lab/test endpoints |
+
+```
+The `SRV-*` test endpoints shown in the captured verification outputs are connected to VLAN 999 and are used to test isolated-segment routing and ACL behavior.
+
+VLAN 100 is defined and routed, but no endpoint connected to VLAN 100 is demonstrated in the captured tests. VLAN 99, not VLAN 999, is used as the native VLAN on trunk links.
+```
 
 ## Routing Design
 
@@ -57,12 +66,13 @@ This design keeps Layer 2 boundaries smaller and makes the core routing layer mo
 
 ## Security Features
 
-The lab includes basic enterprise security practices:
+The lab includes the following basic security practices:
 
-* SSH-only remote access
+* SSH-only remote access on routers and multilayer switches
 * Local user authentication
-* Native VLAN separation
-* Isolated VLAN for unused or restricted ports
+* PortFast and BPDU Guard on active end-device ports
+* Native VLAN 99 separated from user VLANs
+* An inbound ACL on VLAN 999 restricting non-ICMP traffic toward private networks
 
 ## Configuration Files
 
