@@ -40,7 +40,12 @@ The Distribution layer contains:
 
 Each Distribution switch connects to both Core switches.
 
-A direct Layer 3 link between the Distribution switches provides an additional routing path and improves resiliency.
+The Distribution switches are connected through two separate links:
+
+- A routed Layer 3 link used by OSPF as an additional routing path.
+- An 802.1Q trunk carrying VLANs 10, 20, 30, and 40.
+
+The Layer 2 trunk allows an Access switch to reach the Distribution switch hosting its VLAN gateway when traffic enters through the alternate uplink.
 
 The Distribution switches provide the default gateways for the user VLANs.
 
@@ -133,7 +138,8 @@ The lab includes:
 - Two Distribution switches
 - Four Access switches
 - Full-mesh Layer 3 connectivity between Core and Distribution
-- A direct Layer 3 link between Distribution switches
+- A routed Layer 3 link between the Distribution switches
+- A separate 802.1Q trunk between the Distribution switches
 - Dual uplinks from each Access switch
 - HSRP gateway redundancy
 - OSPF dynamic routing
