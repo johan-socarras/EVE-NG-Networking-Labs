@@ -50,6 +50,19 @@ A routed Layer 3 link connects the two Distribution switches.
 
 This link provides an additional OSPF path between the Distribution switches.
 
+## Distribution Layer 2 Trunk
+
+In addition to the routed OSPF link, the Distribution switches use a separate Layer 2 trunk.
+
+| Device | Interface | Remote Device | Allowed VLANs |
+|---|---|---|---|
+| `D-SW-1` | `GigabitEthernet0/3` | `D-SW-2` | 10, 20, 30, 40 |
+| `D-SW-2` | `GigabitEthernet0/3` | `D-SW-1` | 10, 20, 30, 40 |
+
+The routed and switched connections use separate physical interfaces.
+
+The trunk carries the user VLANs between the Distribution switches and supports Access-uplink redundancy without extending OSPF over the Layer 2 connection.
+
 ## User VLAN Networks
 
 The user networks are divided into four VLANs.
