@@ -1,6 +1,22 @@
 # Verification
 
-This file documents the commands and tests used to verify the Three-Tier Enterprise LAN Lab.
+## Verification Summary
+
+| Verification Area | Expected Result | Status |
+|---|---|---|
+| VLANs and 802.1Q trunks | Required VLANs exist and trunk links carry the correct VLANs | Passed |
+| Rapid-PVST | Spanning Tree operates correctly and root bridge placement matches the design | Passed |
+| EtherChannel | Bundled links operate correctly without configuration inconsistencies | Passed |
+| Layer 3 interfaces | Routed links are operational with the expected IP addressing | Passed |
+| OSPF | Neighbor adjacencies form and internal routes are learned dynamically | Passed |
+| HSRP | Redundant default gateways operate with the expected active and standby roles | Passed |
+| DHCP relay | Clients receive addressing through the configured relay paths | Passed |
+| Inter-VLAN and inter-site routing | Internal networks can communicate according to the lab design | Passed |
+| NAT/PAT | Internal devices can reach the simulated external network | Passed |
+| Management ACLs | SSH management access is restricted to authorized networks | Passed |
+| End-to-end connectivity | Clients and servers can reach the required internal and external destinations | Passed |
+
+The detailed command outputs and test results for each verification area are provided in the sections below.
 
 ## 1. VLAN and Trunk Verification
 
