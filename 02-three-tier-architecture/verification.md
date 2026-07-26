@@ -19,20 +19,21 @@ The verification process covers:
 
 ## Verification Summary
 
-| Verification Area | Expected Result | Status |
-|---|---|---|
-| Physical and logical interfaces | Required interfaces are operational | Passed |
-| VLAN configuration | VLANs 10, 20, 30, and 40 exist on the appropriate switches | Passed |
-| Trunk links | Access-to-Distribution trunks carry the assigned VLAN | Passed |
-| Rapid-PVST | One redundant Access uplink forwards while the alternate path remains available | Passed |
-| Layer 3 transit links | Core and Distribution routed interfaces are operational | Passed |
-| OSPF neighbors | Core and Distribution switches establish the expected adjacencies | Passed |
-| OSPF routes | Loopback, transit, VLAN, and default routes are learned correctly | Passed |
-| HSRP | C-SW-1 is Active and C-SW-2 is Standby for virtual IP 192.168.116.101 | Passed |
-| Inter-VLAN routing | Hosts in different VLANs communicate through the Distribution layer | Passed |
-| Simulated Internet reachability | Internal hosts reach the simulated Internet node | Passed |
-| Link redundancy | Traffic uses an alternate path after a routed or trunk link failure | Passed |
-| HSRP failover | C-SW-2 assumes the Active role if C-SW-1 becomes unavailable | Passed |
+| Verification Area | Validation Criteria |
+|---|---|
+| Physical and logical interfaces | Required interfaces must be operational |
+| VLAN configuration | VLANs 10, 20, 30, and 40 must exist on the appropriate switches |
+| Trunk links | Access-to-Distribution trunks must carry the assigned VLAN |
+| Rapid-PVST | One Access uplink must forward while the alternate remains available |
+| Layer 3 transit links | Core and Distribution routed interfaces must be operational |
+| OSPF neighbors | Core and Distribution switches must establish the expected adjacencies |
+| OSPF routes | Loopback, transit, VLAN, and default routes must be learned correctly |
+| HSRP | C-SW-1 should be Active and C-SW-2 Standby for `192.168.116.101` |
+| Inter-VLAN routing | Hosts in different VLANs must communicate through the Distribution layer |
+| Simulated Internet reachability | Internal hosts must reach the simulated Internet node |
+| Routed-link redundancy | Traffic must use an alternate OSPF path after a routed-link failure |
+| Access-uplink redundancy | The alternate trunk must forward after the active trunk fails |
+| HSRP failover | C-SW-2 must assume the Active role if C-SW-1 becomes unavailable |
 
 ---
 
