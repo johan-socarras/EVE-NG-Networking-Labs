@@ -54,7 +54,8 @@ Expected result:
 - The Distribution interconnection is up/up.
 - The Internet-facing interfaces on both Core switches are up/up.
 - Required VLAN interfaces are up/up.
-- Access switches
+
+## Access switches
 
 Run:
 ```cisco
@@ -91,15 +92,19 @@ Expected result:
 
 ## 3. Trunk Verification
 
-Run:
+### Distribution-to-Distribution Trunk
+
+Run on both Distribution switches:
+
 ```cisco
 show interfaces trunk
 ```
 
 Expected result:
 
-- Both uplinks on each Access switch operate as 802.1Q trunks.
-- Each trunk permits the VLAN assigned to that Access switch.
+- `GigabitEthernet0/3` operates as an 802.1Q trunk.
+- VLANs 10, 20, 30, and 40 are allowed and active on the trunk.
+- The Layer 2 trunk is separate from the routed OSPF link on `GigabitEthernet0/2`.
 
 Expected VLANs:
 
@@ -125,12 +130,12 @@ show spanning-tree root
 
 Expected root placement:
 
-| VLAN	Root | Bridge |
+| VLAN |	Root Bridge |
 |---|---|
-| VLAN 10 |	D-SW-1 |
-| VLAN 20 |	D-SW-2 |
-| VLAN 30 |	D-SW-1 |
-| VLAN 40 |	D-SW-2 |
+| VLAN 10 |	`D-SW-1` |
+| VLAN 20 |	`D-SW-2` |
+| VLAN 30 |	`D-SW-1` |
+| VLAN 40 |	`D-SW-2` |
 
 Run on each Access switch:
 ```cisco
@@ -158,14 +163,14 @@ show interfaces description
 
 Expected routed connections:
 
-| Local Device |	Remote Device	Local Address |
-|---|---|
-| C-SW-1	D-SW-1 |	10.0.0.1/30 |
-| C-SW-1	D-SW-2 |	10.0.0.5/30 |
-| C-SW-2	D-SW-1 |	10.0.0.9/30 |
-| C-SW-2	D-SW-2 |	10.0.0.13/30 |
-| D-SW-1	D-SW-2 |	10.0.0.17/30 |
-| D-SW-2	D-SW-1 |	10.0.0.18/30 |
+| Local Device |	Remote Device |	Local Address |
+|---|---|---|
+| C-SW-1 |	D-SW-1 |	10.0.0.1/30 |
+| C-SW-1 |	D-SW-2 |	10.0.0.5/30 |
+| C-SW-2 |	D-SW-1 |	10.0.0.9/30 |
+| C-SW-2 |	D-SW-2 |	10.0.0.13/30 |
+| D-SW-1 |	D-SW-2 |	10.0.0.17/30 |
+| D-SW-2 |	D-SW-1 |	10.0.0.18/30 |
 
 Test each directly connected neighbor with `ping`.
 
@@ -278,12 +283,12 @@ Confirm:
 
 Example end-device addressing:
 
-| Device |	Address	Gateway |
+| Device |	Address |	Gateway |
 |---|---|
-| PC-1 |	10.10.10.100/24	10.10.10.1 |
-| PC-2 |	10.10.20.100/24	10.10.20.1 |
-| PC-3 |	10.10.30.100/24	10.10.30.1 |
-| PC-4 |	10.10.40.100/24	10.10.40.1 |
+| PC-1 |	10.10.10.100/24 |	10.10.10.1 |
+| PC-2 |	10.10.20.100/24 |	10.10.20.1 |
+| PC-3 |	10.10.30.100/24 |	10.10.30.1 |
+| PC-4 |	10.10.40.100/24 |	10.10.40.1 |
 
 Test each local gateway first.
 
@@ -303,7 +308,7 @@ Expected result:
 - Hosts in different VLANs communicate successfully.
 - Traffic is routed through the Distribution and Core topology as required.
 
-### 10. Simulated Internet Connectivity
+## 10. Simulated Internet Connectivity
 
 From each Core switch:
 ```cisco
