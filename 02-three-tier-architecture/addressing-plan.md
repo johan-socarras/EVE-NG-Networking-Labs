@@ -118,6 +118,7 @@ The virtual IP is:
 ```text
 192.168.116.101
 ```
+
 This provides a shared redundant Core-side address on the external lab segment.
 
 This differs from the more common campus implementation in which HSRP provides the default gateway for internal user VLANs.
