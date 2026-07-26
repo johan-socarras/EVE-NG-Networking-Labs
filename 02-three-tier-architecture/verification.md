@@ -101,6 +101,7 @@ Run on each Access switch:
 ```cisco
 show interfaces trunk
 ```
+
 Expected result:
 
 - Both uplinks operate as 802.1Q trunks.
@@ -128,19 +129,12 @@ Expected result:
 - VLANs 10, 20, 30, and 40 are allowed and active on the trunk.
 - The Layer 2 trunk is separate from the routed OSPF link on `GigabitEthernet0/2`.
 
-Expected VLANs:
-
-| Access Switch |	Allowed VLAN |
-|---|---|
-| A-SW-1 |	VLAN 10 |
-| A-SW-2 |	VLAN 20 |
-| A-SW-3 |	VLAN 30 |
-| A-SW-4 |	VLAN 40 |
-
 Additional command:
+
 ```cisco
 show interfaces switchport
 ```
+
 This command confirms the administrative and operational switchport modes.
 
 ## 4. Spanning Tree Verification
@@ -439,6 +433,7 @@ interface GigabitEthernet0/0
 Because preemption is enabled and C-SW-1 has a higher priority, it should regain the Active role.
 
 ## 14. Useful Troubleshooting Commands
+
 ```cisco
 show running-config
 show ip interface brief
