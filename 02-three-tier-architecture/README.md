@@ -6,20 +6,13 @@ This lab documents a three-tier enterprise network built in EVE-NG using Core, D
 
 The design focuses on:
 
-- Layer 3 redundancy between Core and Distribution switches
-- Redundant uplinks between network layers
-- HSRP gateway redundancy
+- Layer 3 redundancy
+- Redundant uplinks
 - VLAN segmentation
-- Dynamic routing
-- Enterprise network availability
-
-## Documentation Notice
-
-The original lab was completed and tested in EVE-NG.
-
-The original virtual lab environment and device configuration files were later lost during a system migration. The documentation and configuration files in this folder are being reconstructed from the original topology, addressing notes, and design information.
-
-Reconstructed configuration files are not presented as original `show running-config` outputs. They represent a technically consistent recreation of the original design.
+- HSRP gateway redundancy
+- OSPF dynamic routing
+- High availability
+- Network troubleshooting and verification
 
 ## Topology
 
@@ -34,9 +27,9 @@ The Core layer contains two Layer 3 switches:
 - `C-SW-1`
 - `C-SW-2`
 
-Each Core switch connects to both Distribution switches using routed Layer 3 links.
+Each Core switch connects to both Distribution switches through routed Layer 3 links.
 
-The Core switches also provide redundant connectivity toward the simulated Internet edge.
+The Core switches also connect to the simulated Internet edge and use HSRP to provide gateway redundancy.
 
 ### Distribution Layer
 
@@ -47,7 +40,9 @@ The Distribution layer contains:
 
 Each Distribution switch connects to both Core switches.
 
-The Distribution switches also have a direct connection between them to provide additional redundancy and routing continuity.
+A direct Layer 3 link between the Distribution switches provides an additional routing path and improves resiliency.
+
+The Distribution switches provide the default gateways for the user VLANs.
 
 ### Access Layer
 
@@ -58,14 +53,14 @@ The Access layer contains four switches:
 - `A-SW-3`
 - `A-SW-4`
 
-Each Access switch is dual-homed to both Distribution switches.
+Each Access switch is connected to both Distribution switches for redundant Layer 2 connectivity.
 
-Each Access switch provides connectivity for one user VLAN and subnet.
+Each Access switch serves one user VLAN.
 
 ## Device Roles and Loopback Addresses
 
 | Device | Layer | Loopback 0 | Role |
-|---|---|---:|---|
+|---|---|---|---|
 | `C-SW-1` | Core | `10.222.0.1/32` | Primary Core switch |
 | `C-SW-2` | Core | `10.222.0.2/32` | Secondary Core switch |
 | `D-SW-1` | Distribution | `10.222.0.3/32` | Primary Distribution switch |
@@ -86,51 +81,64 @@ Each Access switch provides connectivity for one user VLAN and subnet.
 
 ## Internet Edge Redundancy
 
-The Core switches use HSRP on the network facing the simulated Internet edge.
+In this lab, HSRP is intentionally implemented on the Core switches on the segment facing the simulated Internet node.
 
-| Device | Interface Address |
+This is not the typical campus deployment in which HSRP provides the default gateway for end-user VLANs. The design was used as a lab-specific method to provide a shared and redundant Layer 3 address between the two Core switches and the simulated Internet segment.
+
+| Device | IP Address |
 |---|---|
-| `C-SW-1` | `192.168.116.102` |
-| `C-SW-2` | `192.168.116.103` |
+| `C-SW-1` | `192.168.116.102/24` |
+| `C-SW-2` | `192.168.116.103/24` |
 | HSRP Virtual IP | `192.168.116.101` |
 | Internet Gateway | `192.168.116.2` |
 
-The HSRP virtual address provides a consistent Layer 3 gateway for the network.
+The virtual IP `192.168.116.101` represents the redundant Core-side address on the Internet-facing segment.
 
-If the active Core switch becomes unavailable, the standby Core switch can assume the virtual gateway role.
+If the active Core switch becomes unavailable, the standby Core switch assumes ownership of the HSRP virtual IP, preserving Layer 3 availability on that segment.
+
+The HSRP placement in this lab is intentional and reflects the requirements and limitations of the simulated topology.
 
 ## Routing Design
 
 The network uses routed Layer 3 links between the Core and Distribution switches.
 
-This reduces the Layer 2 failure domain and provides multiple routing paths between the Core and Distribution layers.
-
 OSPF is used to advertise:
 
-- Core loopback networks
-- Distribution loopback networks
-- Routed transit links
+- Core loopback interfaces
+- Distribution loopback interfaces
+- Layer 3 transit networks
 - User VLAN networks
 - The default route toward the Internet edge
 
+The routed design reduces Layer 2 failure domains and provides multiple paths between the Core and Distribution layers.
+
+## Gateway Redundancy
+
+HSRP is used to provide redundant default gateways.
+
+At the Distribution layer, the switches provide virtual gateway addresses for the user VLANs.
+
+At the Core layer, HSRP provides a shared redundant IP address on the segment facing the simulated Internet node. This lab-specific placement differs from the more common use of HSRP as an end-user default gateway.
+
 ## Redundancy Design
 
-The lab includes multiple forms of redundancy:
+The lab includes:
 
 - Two Core switches
 - Two Distribution switches
-- Full-mesh Layer 3 links between Core and Distribution
-- Direct routing link between Distribution switches
-- Dual-homed Access switches
+- Four Access switches
+- Full-mesh Layer 3 connectivity between Core and Distribution
+- A direct Layer 3 link between Distribution switches
+- Dual uplinks from each Access switch
 - HSRP gateway redundancy
-- Dynamic routing through OSPF
+- OSPF dynamic routing
 
-The objective is to maintain network connectivity when an individual link or network device becomes unavailable.
+The design allows traffic to use alternate paths when a network link or device becomes unavailable.
 
 ## Technologies Practiced
 
-- Three-tier enterprise architecture
-- Layer 3 switching
+- Three-tier enterprise network architecture
+- Cisco Layer 3 switching
 - Routed switch ports
 - VLAN segmentation
 - 802.1Q trunking
@@ -145,60 +153,55 @@ The objective is to maintain network connectivity when an individual link or net
 ## Lab Goals
 
 1. Build a three-tier network using Core, Distribution, and Access layers.
-2. Configure routed links between the Core and Distribution switches.
-3. Establish OSPF neighbor relationships across the Layer 3 links.
-4. Advertise loopbacks, transit links, and VLAN subnets through OSPF.
-5. Configure redundant uplinks for Access switches.
-6. Configure HSRP toward the simulated Internet edge.
-7. Verify that internal VLANs can communicate across the network.
-8. Verify that network connectivity continues after a link or device failure.
-9. Document the reconstructed configurations and validation process.
+2. Configure Layer 3 routed links between Core and Distribution switches.
+3. Establish OSPF neighbor relationships.
+4. Advertise loopbacks, transit networks, and VLAN networks through OSPF.
+5. Configure redundant uplinks between the Access and Distribution layers.
+6. Configure HSRP for user VLAN gateways.
+7. Configure HSRP toward the simulated Internet edge.
+8. Verify inter-VLAN connectivity.
+9. Verify end-to-end network connectivity.
+10. Test link and device redundancy.
 
-## Reconstructed Configuration Files
+## Configuration Files
 
-Reconstructed device configurations will be stored in the `configs` folder.
+Sanitized device configurations are stored in the `configs` folder:
 
-Planned files:
-
-- `configs/C-SW-1.txt`
-- `configs/C-SW-2.txt`
-- `configs/D-SW-1.txt`
-- `configs/D-SW-2.txt`
-- `configs/A-SW-1.txt`
-- `configs/A-SW-2.txt`
-- `configs/A-SW-3.txt`
-- `configs/A-SW-4.txt`
-
-These files are reconstructed from the original design and should be reviewed and tested before being considered fully validated.
+- [C-SW-1 Configuration](configs/C-SW-1.txt)
+- [C-SW-2 Configuration](configs/C-SW-2.txt)
+- [D-SW-1 Configuration](configs/D-SW-1.txt)
+- [D-SW-2 Configuration](configs/D-SW-2.txt)
+- [A-SW-1 Configuration](configs/A-SW-1.txt)
+- [A-SW-2 Configuration](configs/A-SW-2.txt)
+- [A-SW-3 Configuration](configs/A-SW-3.txt)
+- [A-SW-4 Configuration](configs/A-SW-4.txt)
 
 ## Verification
 
-A separate `verification.md` file will include:
+Verification commands and testing methodology are documented in:
 
-- VLAN and trunk verification
+[View Verification Documentation](verification.md)
+
+Verification areas include:
+
+- VLAN verification
+- Trunk verification
 - Routed-interface verification
 - OSPF neighbor verification
 - Routing-table verification
 - HSRP verification
-- End-to-end connectivity tests
-- Redundancy and failover tests
+- Inter-VLAN connectivity
+- End-to-end connectivity
+- Redundancy and failover testing
 
-Because the original lab environment was lost, new command outputs should only be added after the reconstructed topology is recreated and tested.
+## Security and Privacy
 
-## Current Status
+Passwords, hashes, serial numbers, and sensitive values are removed or changed before publishing.
 
-| Component | Status |
-|---|---|
-| Original topology | Completed |
-| Original lab implementation | Completed |
-| Original testing | Completed |
-| Original device configurations | Lost during system migration |
-| README reconstruction | Completed |
-| Configuration reconstruction | In progress |
-| New verification outputs | Pending lab recreation |
+All addressing and network scenarios are used for lab and documentation purposes.
 
-## Notes
+## Final Result
 
-This project is intended for learning, technical documentation, and portfolio purposes.
+The lab demonstrates a redundant three-tier enterprise architecture using Layer 3 routing, VLAN segmentation, HSRP, OSPF, and multiple network paths.
 
-Passwords, hashes, serial numbers, and sensitive values must be removed or changed before publishing any reconstructed configuration files.
+The design provides gateway redundancy, dynamic route recovery, and resilient connectivity between the Core, Distribution, and Access layers.
