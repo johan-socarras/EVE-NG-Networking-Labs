@@ -110,7 +110,7 @@ seconds and the floating route takes over.
 Gateway `.1` in every VLAN is the SVI on the site's multilayer switch. There is
 no first-hop redundancy here — a collapsed core with a single multilayer switch
 per site has nothing to fail over to, and pretending otherwise would be
-dishonest. FHRP is what [Lab 02](../three-tier-redundant-architecture/README.md) is for.
+dishonest. FHRP is what [Lab 02](../02-three-tier-redundant-architecture/README.md) is for.
 
 | VLAN | Name | Site-DC | Site-A | Site-B | Addressed by |
 |---|---|---|---|---|---|
