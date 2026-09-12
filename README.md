@@ -34,7 +34,7 @@ A three-tier network focused on Layer 3 redundancy, redundant uplinks, HSRP, and
 
 The original lab was completed in EVE-NG. Some documentation and configuration files are being reconstructed after the original lab environment was lost during a system migration.
 
-[View Lab](02-three-tier-architecture/README.md)
+[View Lab](three-tier-redundant-architecture/README.md)
 
 ### 3. Cisco ASA Destination NAT and ACL Lab
 
@@ -50,7 +50,7 @@ Technologies practiced:
 - Firewall troubleshooting
 - Connectivity verification
 
-[View Lab](03-asa-nat-acl/README.md)
+[View Lab](asa-nat-acl/README.md)
 
 ## Skills Demonstrated
 

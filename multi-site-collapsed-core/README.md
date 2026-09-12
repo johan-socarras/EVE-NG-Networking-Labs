@@ -146,7 +146,7 @@ what the failure test exercises, reconverges correctly and without loss.
 
 Fixing it properly means running a routing protocol across the WAN instead of
 static routes. That is deliberately left as the difference between this lab and
-[Lab 02](../02-three-tier-architecture/README.md), which is OSPF end to end.
+[Lab 02](../three-tier-redundant-architecture/README.md), which is OSPF end to end.
 
 ## What is in `configs/`
 
