@@ -1,4 +1,4 @@
-# Verification — Lab 01
+# Verification — Multi-Site Collapsed-Core Enterprise Network
 
 Run these in order. Each step assumes the previous one passed; if one fails, fix
 it before moving on, because later checks depend on it.

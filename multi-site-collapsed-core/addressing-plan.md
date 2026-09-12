@@ -1,4 +1,4 @@
-# IP Addressing Plan — Collapsed-Core Enterprise LAN
+# IP Addressing Plan — Multi-Site Collapsed-Core Enterprise Network
 
 Lab file: `lab01-collapsed-core-lan.unl` · 14 nodes · 18 links
 

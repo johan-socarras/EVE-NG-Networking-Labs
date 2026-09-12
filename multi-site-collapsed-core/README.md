@@ -1,4 +1,4 @@
-# Lab 01 — Collapsed-Core Enterprise LAN
+# Multi-Site Collapsed-Core Enterprise Network
 
 Three sites, seven VLANs, and a WAN triangle that survives losing a link. Each
 site is a self-contained routing domain; the sites are stitched together by
@@ -17,12 +17,13 @@ answering.
 
 ## About the name
 
-The folder is called `01-three-tier-enterprise-lan` for link stability — it is
-referenced from outside this repository — but the lab is **not** three-tier and
-does not claim to be. The real chain is **access switch → site multilayer switch
-→ site router**: a collapsed core, with no separate distribution layer. An
-earlier revision of this lab called itself three-tier while implementing exactly
-this; the design did not change, the description did.
+An earlier revision of this lab called itself *three-tier*. It was not, and
+this one does not claim to be: the real chain is **access switch → site
+multilayer switch → site router**, a collapsed core with no separate
+distribution layer. *Multi-site* is the part that matters — three of those
+sites meshed in a WAN triangle, which is what the failure test in
+[`verification.md`](verification.md) exercises. The design did not change
+between revisions; the description did.
 
 ## Layers
 

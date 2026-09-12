@@ -6,7 +6,7 @@ The purpose of this repository is to demonstrate practical networking skills thr
 
 ## Featured Labs
 
-### 1. Collapsed-Core Enterprise LAN
+### 1. Multi-Site Collapsed-Core Enterprise Network
 
 A three-site enterprise LAN: access switches, a multilayer switch per site doing
 both distribution and core, and site routers meshed in a WAN triangle. Inter-site
@@ -26,7 +26,7 @@ Technologies practiced:
 - SSH-only management with a VTY access-class
 - NTP hierarchy
 
-[View Lab](01-three-tier-enterprise-lan/README.md)
+[View Lab](multi-site-collapsed-core/README.md)
 
 ### 2. Three-Tier Redundant Architecture
 
