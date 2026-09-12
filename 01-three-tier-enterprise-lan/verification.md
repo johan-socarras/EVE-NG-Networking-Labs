@@ -1,1013 +1,382 @@
-# Verification
+# Verification — Lab 01
 
-## Verification Summary
+Run these in order. Each step assumes the previous one passed; if one fails, fix
+it before moving on, because later checks depend on it.
 
-| Verification Area | Expected Result | Status |
-|---|---|---|
-| VLANs and 802.1Q trunks | Required VLANs exist and trunk links carry the correct VLANs | Passed |
-| Rapid-PVST | Spanning Tree operates correctly and root bridge placement matches the design | Passed |
-| Layer 3 interfaces | Routed links are operational with the expected IP addressing | Passed |
-| Data Center OSPF | `RTR-DC-01` and `CSW-DC-01` form a FULL adjacency and exchange local VLAN routes | Passed |
-| Routing tables | Captured tables contain connected VLANs, OSPF-learned local-site routes, static inter-site routes, and static default routes | Passed |
-| Documented ICMP reachability | Captured ICMP tests succeed between the isolated lab endpoints at different sites | Passed |
+Every number quoted as *Measured* was taken from the finished lab, not estimated.
 
-The detailed command outputs and test results for each verification area are provided in the sections below.
+Console ports are assigned by EVE-NG in node order starting at 32769 — see
+[`addressing-plan.md`](addressing-plan.md). Reaching them with
+`telnet <eve-ip> <port>` is usually quicker than the HTML5 console.
 
-## 1. VLAN and Trunk Verification
+## 0. Nodes booted with their configuration
 
-Commands used:
-
-```cisco
-show vlan brief
-show interfaces trunk
+```
+show running-config | include hostname
 ```
 
-Expected result:
+Expected: the device's own hostname on all ten IOS nodes. A node answering
+`Switch>` booted with the factory config — EVE-NG only injects the
+startup-config into a node that boots clean. Stop it, **Wipe** it, start it
+again.
 
-* VLANs 10, 20, 30, 99, 100, and 999 should exist.
-* Trunk links should allow VLANs 10, 20, 30, 99, 100, and 999.
-* Native VLAN should be VLAN 99.
+**Measured:** 14 of 14 nodes came up with their own hostname on the first boot.
 
-Verifications:
+If a node refuses to start at all (EVE-NG reports "started" but no QEMU process
+appears), wipe it too. A recreated node reusing the same node ID also reuses the
+old working directory, so wipe it once more after recreating it.
 
-```cisco
-CSW-DC-01#sh vlan brief
+## 1. Addressing and interface state
 
-VLAN Name                             Status    Ports
----- -------------------------------- --------- -------------------------------
-1    default                          active    Gi0/3, Gi1/0, Gi1/1, Gi1/2
-                                                Gi1/3
-10   Management                       active
-20   Data                             active
-30   Voice                            active
-99   Native-trunk                     active
-100  Server                           active
-999  Isolated-Lab                     active
-1002 fddi-default                     act/unsup
-1003 token-ring-default               act/unsup
-1004 fddinet-default                  act/unsup
-1005 trnet-default                    act/unsup
-CSW-DC-01#show interfaces trunk
+On every device:
 
-Port        Mode             Encapsulation  Status        Native vlan
-Gi0/1       on               802.1q         trunking      99
-Gi0/2       on               802.1q         trunking      99
-
-Port        Vlans allowed on trunk
-Gi0/1       10,20,30,99-100,999
-Gi0/2       10,20,30,99-100,999
-
-Port        Vlans allowed and active in management domain
-Gi0/1       10,20,30,99-100,999
-Gi0/2       10,20,30,99-100,999
-
-Port        Vlans in spanning tree forwarding state and not pruned
-Gi0/1       10,20,30,99-100,999
-Gi0/2       10,20,30,99-100,999
 ```
-```cisco
-ASW-DC-01#sh vlan brief
-
-VLAN Name                             Status    Ports
----- -------------------------------- --------- -------------------------------
-1    default                          active    Gi0/2, Gi0/3, Gi1/0, Gi1/1
-                                                Gi1/2, Gi1/3
-10   Management                       active
-20   Data                             active
-30   Voice                            active    Gi0/1
-99   Native-trunk                     active
-100  Server                           active
-999  Isolated-Lab                     active    Gi0/1
-1002 fddi-default                     act/unsup
-1003 token-ring-default               act/unsup
-1004 fddinet-default                  act/unsup
-1005 trnet-default                    act/unsup
-ASW-DC-01#show interfaces trunk
-
-Port        Mode             Encapsulation  Status        Native vlan
-Gi0/0       on               802.1q         trunking      99
-
-Port        Vlans allowed on trunk
-Gi0/0       10,20,30,99-100,999
-
-Port        Vlans allowed and active in management domain
-Gi0/0       10,20,30,99-100,999
-
-Port        Vlans in spanning tree forwarding state and not pruned
-Gi0/0       10,20,30,99-100,999
+show ip interface brief | exclude unassigned
 ```
 
-```cisco
-CSW-A-01#sh vlan brief
+Expected — every listed interface `up/up`, matching
+[`addressing-plan.md`](addressing-plan.md):
 
-VLAN Name                             Status    Ports
----- -------------------------------- --------- -------------------------------
-1    default                          active    Gi0/2, Gi0/3, Gi1/0, Gi1/1
-                                                Gi1/2, Gi1/3
-10   Management                       active
-20   Data                             active
-30   Voice                            active
-99   Native-trunk                     active
-100  Server                           active
-999  Isolated-Lab                     active
-1002 fddi-default                     act/unsup
-1003 token-ring-default               act/unsup
-1004 fddinet-default                  act/unsup
-1005 trnet-default                    act/unsup
-CSW-A-01#show interfaces trunk
+| Device | Expected addresses |
+|---|---|
+| RTR-DC-01 | `Gi0/0 10.0.0.1`, `Gi0/1 172.16.0.5`, `Gi0/2 172.16.0.1`, `Lo0 10.0.255.1` |
+| RTR-A-01 | `Gi0/0 172.16.0.9`, `Gi0/1 172.16.0.2`, `Gi0/2 10.1.0.1`, `Lo0 10.1.255.1` |
+| RTR-B-01 | `Gi0/0 172.16.0.6`, `Gi0/1 172.16.0.10`, `Gi0/2 10.2.0.1`, `Lo0 10.2.255.1` |
+| CSW-DC-01 | `Gi0/0 10.0.0.2`, `Lo0 10.0.255.2`, `Vlan10/20/30/100/199` on `10.0.x.1` |
+| CSW-A-01 | `Gi0/0 10.1.0.2`, `Lo0 10.1.255.2`, `Vlan10/20/30/100/199` on `10.1.x.1` |
+| CSW-B-01 | `Gi0/0 10.2.0.2`, `Lo0 10.2.255.2`, `Vlan10/20/30/100/199` on `10.2.x.1` |
+| ASW-DC-01 / -02 | `Vlan10 10.0.10.11` / `10.0.10.12` |
+| ASW-A-01 / B-01 | `Vlan10 10.1.10.11` / `10.2.10.11` |
 
-Port        Mode             Encapsulation  Status        Native vlan
-Gi0/1       on               802.1q         trunking      99
+An interface showing `administratively down` is missing its `no shutdown`. One
+that is `up/down` is cabled to the wrong peer — check the interface map.
 
-Port        Vlans allowed on trunk
-Gi0/1       10,20,30,99-100,999
+**Measured:** all 37 expected addresses present, no interface down.
+That is 4 on each router, 7 on each multilayer switch and 1 on each access
+switch. The four VPCS endpoints are not in that count: they do not run IOS,
+so they have no `show ip interface brief` to read.
 
-Port        Vlans allowed and active in management domain
-Gi0/1       10,20,30,99-100,999
+## 2. EtherChannel
 
-Port        Vlans in spanning tree forwarding state and not pruned
-Gi0/1       10,20,30,99-100,999
+```
+show etherchannel summary
 ```
 
-```cisco
-CSW-B-01#sh vlan brief
+Expected: every bundle `Po(SU)` with both members `(P)`. `S` = Layer 2,
+`U` = in use, `(P)` = bundled. Protocol shows `-`, not `LACP`: these bundles are
+static on purpose — see §10.
 
-VLAN Name                             Status    Ports
----- -------------------------------- --------- -------------------------------
-1    default                          active    Gi0/2, Gi0/3, Gi1/0, Gi1/1
-                                                Gi1/2, Gi1/3
-10   Management                       active
-20   Data                             active
-30   Voice                            active
-99   Native-trunk                     active
-100  Server                           active
-999  Isolated-Lab                     active
-1002 fddi-default                     act/unsup
-1003 token-ring-default               act/unsup
-1004 fddinet-default                  act/unsup
-1005 trnet-default                    act/unsup
-CSW-B-01#show interfaces trunk
+**Measured:** 8 port-channels, all `(SU)`, all 16 members `(P)`.
 
-Port        Mode             Encapsulation  Status        Native vlan
-Gi0/1       on               802.1q         trunking      99
-
-Port        Vlans allowed on trunk
-Gi0/1       10,20,30,99-100,999
-
-Port        Vlans allowed and active in management domain
-Gi0/1       10,20,30,99-100,999
-
-Port        Vlans in spanning tree forwarding state and not pruned
-Gi0/1       10,20,30,99-100,999
 ```
-The same verification was completed on the remaining access switches.
+CSW-DC-01#show etherchannel summary
+1      Po1(SU)          -        Gi0/1(P)    Gi1/0(P)
+2      Po2(SU)          -        Gi0/2(P)    Gi1/1(P)
+```
 
-Status: Passed
+A member showing `(s)` — suspended — means the bundle is not forming. Check that
+**both members carry identical switchport configuration**; one differing line is
+enough.
 
-## 2. STP Verification
+## 3. Spanning tree
 
-Commands used:
-
-```cisco
-show spanning-tree summary
+```
 show spanning-tree vlan 10
-show spanning-tree vlan 20
-show spanning-tree vlan 99
 ```
 
-Expected result:
+Expected: the site's multilayer switch is root for every VLAN (priority 24576),
+and the access switches see it as root.
 
-* Rapid-PVST should be enabled.
-* Root bridge placement should match the lab design.
-* Access ports should use PortFast and BPDU Guard where appropriate.
+**Measured:**
 
-Verifications:
+| Device | VLAN 10 |
+|---|---|
+| CSW-DC-01 | `This bridge is the root`, priority 24586 |
+| ASW-DC-01 | root ID `5000.0004.0000` (CSW-DC-01), own priority 32778 |
+| CSW-A-01 | `This bridge is the root`, priority 24586 |
+| ASW-A-01 | root ID `5000.0005.0000` (CSW-A-01), own priority 32778 |
 
-```cisco
-CSW-DC-01#show spanning-tree summary
-Switch is in rapid-pvst mode
-Root bridge for: VLAN0010, VLAN0020, VLAN0030, VLAN0099-VLAN0100, VLAN0999
-Extended system ID                      is enabled
-Portfast Default                        is disabled
-Portfast Edge BPDU Guard Default        is disabled
-Portfast Edge BPDU Filter Default       is disabled
-Loopguard Default                       is disabled
-PVST Simulation Default                 is enabled but inactive in rapid-pvst mode
-Bridge Assurance                        is enabled
-EtherChannel misconfig guard            is enabled
-Configured Pathcost method used is short
-UplinkFast                              is disabled
-BackboneFast                            is disabled
+That the access switch sees the multilayer switch as root also proves STP BPDUs
+cross the EVE-NG bridges — which matters for §10.
 
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0010                     0         0        0          2          2
-VLAN0020                     0         0        0          2          2
-VLAN0030                     0         0        0          2          2
-VLAN0099                     0         0        0          2          2
-VLAN0100                     0         0        0          2          2
+## 4. OSPF adjacencies
 
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0999                     0         0        0          2          2
----------------------- -------- --------- -------- ---------- ----------
-6 vlans                      0         0        0         12         12
-CSW-DC-01#show spanning-tree vlan 10
-
-VLAN0010
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24586
-             Address     5000.0004.0000
-             This bridge is the root
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    24586  (priority 24576 sys-id-ext 10)
-             Address     5000.0004.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/1               Desg FWD 4         128.2    P2p
-Gi0/2               Desg FWD 4         128.3    P2p
-
-
-CSW-DC-01#show spanning-tree vlan 20
-
-VLAN0020
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24596
-             Address     5000.0004.0000
-             This bridge is the root
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    24596  (priority 24576 sys-id-ext 20)
-             Address     5000.0004.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/1               Desg FWD 4         128.2    P2p
-Gi0/2               Desg FWD 4         128.3    P2p
-
-
-CSW-DC-01#show spanning-tree vlan 99
-
-VLAN0099
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24675
-             Address     5000.0004.0000
-             This bridge is the root
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    24675  (priority 24576 sys-id-ext 99)
-             Address     5000.0004.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/1               Desg FWD 4         128.2    P2p
-Gi0/2               Desg FWD 4         128.3    P2p
 ```
-
-```cisco 
-ASW-DC-01#show spanning-tree summary
-Switch is in rapid-pvst mode
-Root bridge for: none
-Extended system ID                      is enabled
-Portfast Default                        is disabled
-Portfast Edge BPDU Guard Default        is disabled
-Portfast Edge BPDU Filter Default       is disabled
-Loopguard Default                       is disabled
-PVST Simulation Default                 is enabled but inactive in rapid-pvst mode
-Bridge Assurance                        is enabled
-EtherChannel misconfig guard            is enabled
-Configured Pathcost method used is short
-UplinkFast                              is disabled
-BackboneFast                            is disabled
-
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0010                     0         0        0          1          1
-VLAN0020                     0         0        0          1          1
-VLAN0030                     0         0        0          2          2
-VLAN0099                     0         0        0          1          1
-VLAN0100                     0         0        0          1          1
-
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0999                     0         0        0          2          2
----------------------- -------- --------- -------- ---------- ----------
-6 vlans                      0         0        0          8          8
-ASW-DC-01#show spanning-tree vlan 10
-
-VLAN0010
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24586
-             Address     5000.0004.0000
-             Cost        4
-             Port        1 (GigabitEthernet0/0)
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    32778  (priority 32768 sys-id-ext 10)
-             Address     5000.0005.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/0               Root FWD 4         128.1    P2p
-
-
-ASW-DC-01#show spanning-tree vlan 20
-
-VLAN0020
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24596
-             Address     5000.0004.0000
-             Cost        4
-             Port        1 (GigabitEthernet0/0)
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    32788  (priority 32768 sys-id-ext 20)
-             Address     5000.0005.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/0               Root FWD 4         128.1    P2p
-
-
-ASW-DC-01#show spanning-tree vlan 99
-
-VLAN0099
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24675
-             Address     5000.0004.0000
-             Cost        4
-             Port        1 (GigabitEthernet0/0)
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    32867  (priority 32768 sys-id-ext 99)
-             Address     5000.0005.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/0               Root FWD 4         128.1    P2p
-```
-
-```cisco
-CSW-A-01#show spanning-tree summary
-Switch is in rapid-pvst mode
-Root bridge for: VLAN0010, VLAN0020, VLAN0030, VLAN0099-VLAN0100, VLAN0999
-Extended system ID                      is enabled
-Portfast Default                        is disabled
-Portfast Edge BPDU Guard Default        is disabled
-Portfast Edge BPDU Filter Default       is disabled
-Loopguard Default                       is disabled
-PVST Simulation Default                 is enabled but inactive in rapid-pvst mode
-Bridge Assurance                        is enabled
-EtherChannel misconfig guard            is enabled
-Configured Pathcost method used is short
-UplinkFast                              is disabled
-BackboneFast                            is disabled
-
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0010                     0         0        0          1          1
-VLAN0020                     0         0        0          1          1
-VLAN0030                     0         0        0          1          1
-VLAN0099                     0         0        0          1          1
-VLAN0100                     0         0        0          1          1
-
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0999                     0         0        0          1          1
----------------------- -------- --------- -------- ---------- ----------
-6 vlans                      0         0        0          6          6
-CSW-A-01#show spanning-tree vlan 10
-
-VLAN0010
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24586
-             Address     5000.000b.0000
-             This bridge is the root
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    24586  (priority 24576 sys-id-ext 10)
-             Address     5000.000b.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/1               Desg FWD 4         128.2    P2p
-
-
-CSW-A-01#show spanning-tree vlan 20
-
-VLAN0020
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24596
-             Address     5000.000b.0000
-             This bridge is the root
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    24596  (priority 24576 sys-id-ext 20)
-             Address     5000.000b.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/1               Desg FWD 4         128.2    P2p
-
-
-CSW-A-01#show spanning-tree vlan 99
-
-VLAN0099
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24675
-             Address     5000.000b.0000
-             This bridge is the root
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    24675  (priority 24576 sys-id-ext 99)
-             Address     5000.000b.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/1               Desg FWD 4         128.2    P2p
-```
-
-```cisco
-CSW-B-01#show spanning-tree summary
-Switch is in rapid-pvst mode
-Root bridge for: VLAN0010, VLAN0020, VLAN0030, VLAN0099-VLAN0100, VLAN0999
-Extended system ID                      is enabled
-Portfast Default                        is disabled
-Portfast Edge BPDU Guard Default        is disabled
-Portfast Edge BPDU Filter Default       is disabled
-Loopguard Default                       is disabled
-PVST Simulation Default                 is enabled but inactive in rapid-pvst mode
-Bridge Assurance                        is enabled
-EtherChannel misconfig guard            is enabled
-Configured Pathcost method used is short
-UplinkFast                              is disabled
-BackboneFast                            is disabled
-
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0010                     0         0        0          1          1
-VLAN0020                     0         0        0          1          1
-VLAN0030                     0         0        0          1          1
-VLAN0099                     0         0        0          1          1
-VLAN0100                     0         0        0          1          1
-
-Name                   Blocking Listening Learning Forwarding STP Active
----------------------- -------- --------- -------- ---------- ----------
-VLAN0999                     0         0        0          1          1
----------------------- -------- --------- -------- ---------- ----------
-6 vlans                      0         0        0          6          6
-CSW-B-01#show spanning-tree vlan 10
-
-VLAN0010
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24586
-             Address     5000.000c.0000
-             This bridge is the root
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    24586  (priority 24576 sys-id-ext 10)
-             Address     5000.000c.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/1               Desg FWD 4         128.2    P2p
-
-
-CSW-B-01#show spanning-tree vlan 20
-
-VLAN0020
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24596
-             Address     5000.000c.0000
-             This bridge is the root
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    24596  (priority 24576 sys-id-ext 20)
-             Address     5000.000c.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/1               Desg FWD 4         128.2    P2p
-
-
-CSW-B-01#show spanning-tree vlan 99
-
-VLAN0099
-  Spanning tree enabled protocol rstp
-  Root ID    Priority    24675
-             Address     5000.000c.0000
-             This bridge is the root
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-
-  Bridge ID  Priority    24675  (priority 24576 sys-id-ext 99)
-             Address     5000.000c.0000
-             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
-             Aging Time  300 sec
-
-Interface           Role Sts Cost      Prio.Nbr Type
-------------------- ---- --- --------- -------- --------------------------------
-Gi0/1               Desg FWD 4         128.2    P2p
-```
-
-The same verification was completed on the remaining access switches.
-
-Status: Passed
-
-## 3. Layer 3 Interface Verification
-
-Commands used:
-
-```cisco
-show ip interface brief
-show ip route
-```
-
-Expected result:
-
-* Routed interfaces should be up/up.
-* SVIs should be up/up for active VLANs.
-* Connected routes should appear for local VLANs and point-to-point links.
-
-Verifications:
-
-```cisco
-RTR-DC-01#show ip int brief
-Interface                  IP-Address      OK? Method Status                Protocol
-GigabitEthernet0/0         10.0.0.1        YES NVRAM  up                    up
-GigabitEthernet0/1         172.16.0.5      YES NVRAM  up                    up
-GigabitEthernet0/2         172.16.0.1      YES NVRAM  up                    up
-GigabitEthernet0/3         unassigned      YES NVRAM  administratively down down
-RTR-DC-01#show ip route
-Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
-       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
-       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
-       E1 - OSPF external type 1, E2 - OSPF external type 2
-       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
-       ia - IS-IS inter area, * - candidate default, U - per-user static route
-       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
-       a - application route
-       + - replicated route, % - next hop override, p - overrides from PfR
-
-Gateway of last resort is not set
-
-      10.0.0.0/8 is variably subnetted, 14 subnets, 3 masks
-C        10.0.0.0/30 is directly connected, GigabitEthernet0/0
-L        10.0.0.1/32 is directly connected, GigabitEthernet0/0
-O        10.0.10.0/24 [110/2] via 10.0.0.2, 00:33:09, GigabitEthernet0/0
-O        10.0.20.0/24 [110/2] via 10.0.0.2, 00:33:09, GigabitEthernet0/0
-O        10.0.99.0/24 [110/2] via 10.0.0.2, 00:33:09, GigabitEthernet0/0
-O        10.0.100.0/24 [110/2] via 10.0.0.2, 00:33:09, GigabitEthernet0/0
-S        10.1.10.0/24 [1/0] via 172.16.0.2
-S        10.1.20.0/24 [1/0] via 172.16.0.2
-S        10.1.99.0/24 [1/0] via 172.16.0.2
-S        10.1.100.0/24 [1/0] via 172.16.0.2
-S        10.2.10.0/24 [1/0] via 172.16.0.6
-S        10.2.20.0/24 [1/0] via 172.16.0.6
-S        10.2.99.0/24 [1/0] via 172.16.0.6
-S        10.2.100.0/24 [1/0] via 172.16.0.6
-      172.16.0.0/16 is variably subnetted, 4 subnets, 2 masks
-C        172.16.0.0/30 is directly connected, GigabitEthernet0/2
-L        172.16.0.1/32 is directly connected, GigabitEthernet0/2
-C        172.16.0.4/30 is directly connected, GigabitEthernet0/1
-L        172.16.0.5/32 is directly connected, GigabitEthernet0/1
-```
-
-```cisco
-CSW-DC-01#show ip interface brief
-Interface              IP-Address      OK? Method Status                Protocol
-GigabitEthernet0/0     10.0.0.2        YES NVRAM  up                    up
-GigabitEthernet0/1     unassigned      YES unset  up                    up
-GigabitEthernet0/2     unassigned      YES unset  up                    up
-GigabitEthernet0/3     unassigned      YES unset  administratively down down
-GigabitEthernet1/0     unassigned      YES unset  administratively down down
-GigabitEthernet1/1     unassigned      YES unset  administratively down down
-GigabitEthernet1/2     unassigned      YES unset  administratively down down
-GigabitEthernet1/3     unassigned      YES unset  administratively down down
-Vlan10                 10.0.10.1       YES NVRAM  up                    up
-Vlan20                 10.0.20.1       YES NVRAM  up                    up
-Vlan100                10.0.100.1      YES NVRAM  up                    up
-Vlan999                10.0.99.1       YES NVRAM  up                    up
-CSW-DC-01#show ip route
-Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
-       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
-       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
-       E1 - OSPF external type 1, E2 - OSPF external type 2
-       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
-       ia - IS-IS inter area, * - candidate default, U - per-user static route
-       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
-       a - application route
-       + - replicated route, % - next hop override, p - overrides from PfR
-
-Gateway of last resort is 10.0.0.1 to network 0.0.0.0
-
-S*    0.0.0.0/0 [1/0] via 10.0.0.1
-      10.0.0.0/8 is variably subnetted, 10 subnets, 3 masks
-C        10.0.0.0/30 is directly connected, GigabitEthernet0/0
-L        10.0.0.2/32 is directly connected, GigabitEthernet0/0
-C        10.0.10.0/24 is directly connected, Vlan10
-L        10.0.10.1/32 is directly connected, Vlan10
-C        10.0.20.0/24 is directly connected, Vlan20
-L        10.0.20.1/32 is directly connected, Vlan20
-C        10.0.99.0/24 is directly connected, Vlan999
-L        10.0.99.1/32 is directly connected, Vlan999
-C        10.0.100.0/24 is directly connected, Vlan100
-L        10.0.100.1/32 is directly connected, Vlan100
-```
-
-The same verification was completed on the remaining devices
-
-Status: Passed
-
-## 4. OSPF Verification
-
-Commands used:
-
-```cisco
 show ip ospf neighbor
 show ip ospf interface brief
-show ip route ospf
-show ip protocols
 ```
 
-Expected result:
+Expected across the whole lab: **three adjacencies**, one per site, both ends
+`FULL`. Each of the six routed devices sees exactly **one** neighbour.
 
-* An OSPF adjacency should form between each site router and its local multilayer switch.
-* Local VLAN networks should be advertised from the multilayer switch toward its local router.
-* Inter-site networks are reached through static routes on the site routers, not through OSPF.
-* In the current implementation, the VLAN interfaces participate in OSPF and are not configured as passive interfaces.
+The transit links run `ip ospf network point-to-point`, so the `State` column
+shows `FULL/  -` rather than `FULL/DR` — that is correct, not a fault.
 
-Verifications:
+**Measured:** 6 endpoints in FULL = 3 adjacencies, using the pinned loopback
+router IDs:
 
-```cisco
-RTR-DC-01#show ip ospf neighbor
+| Device | Neighbour ID |
+|---|---|
+| RTR-DC-01 | `10.0.255.2` |
+| CSW-DC-01 | `10.0.255.1` |
+| RTR-A-01 | `10.1.255.2` |
+| CSW-A-01 | `10.1.255.1` |
+| RTR-B-01 | `10.2.255.2` |
+| CSW-B-01 | `10.2.255.1` |
 
-Neighbor ID     Pri   State           Dead Time   Address         Interface
-10.0.100.1        1   FULL/BDR        00:00:30    10.0.0.2        GigabitEthernet0/0
-RTR-DC-01#show ip ospf interface brief
-Interface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C
-Gi0/0        1     0               10.0.0.1/30        1     DR    1/1
-RTR-DC-01#show ip route ospf
-Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
-       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
-       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
-       E1 - OSPF external type 1, E2 - OSPF external type 2
-       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
-       ia - IS-IS inter area, * - candidate default, U - per-user static route
-       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
-       a - application route
-       + - replicated route, % - next hop override, p - overrides from PfR
+More than one neighbour on a device means something that should be passive is
+not — most likely an SVI. Fewer means a link is down or one side is missing its
+`ip ospf 1 area 0`, its authentication key, or its `network point-to-point`.
 
-Gateway of last resort is not set
+## 5. Inter-site routing, including the transit links
 
-      10.0.0.0/8 is variably subnetted, 14 subnets, 3 masks
-O        10.0.10.0/24 [110/2] via 10.0.0.2, 00:36:43, GigabitEthernet0/0
-O        10.0.20.0/24 [110/2] via 10.0.0.2, 00:36:43, GigabitEthernet0/0
-O        10.0.99.0/24 [110/2] via 10.0.0.2, 00:36:43, GigabitEthernet0/0
-O        10.0.100.0/24 [110/2] via 10.0.0.2, 00:36:43, GigabitEthernet0/0
-RTR-DC-01#show ip protocols
-*** IP Routing is NSF aware ***
-
-Routing Protocol is "application"
-  Sending updates every 0 seconds
-  Invalid after 0 seconds, hold down 0, flushed after 0
-  Outgoing update filter list for all interfaces is not set
-  Incoming update filter list for all interfaces is not set
-  Maximum path: 32
-  Routing for Networks:
-  Routing Information Sources:
-    Gateway         Distance      Last Update
-  Distance: (default is 4)
-
-Routing Protocol is "ospf 1"
-  Outgoing update filter list for all interfaces is not set
-  Incoming update filter list for all interfaces is not set
-  Router ID 172.16.0.5
-  Number of areas in this router is 1. 1 normal 0 stub 0 nssa
-  Maximum path: 4
-  Routing for Networks:
-  Routing on Interfaces Configured Explicitly (Area 0):
-    GigabitEthernet0/0
-  Routing Information Sources:
-    Gateway         Distance      Last Update
-    10.0.100.1           110      00:36:52
-  Distance: (default is 110)
-```
-
-```cisco
-CSW-DC-01#show ip ospf neighbor
-
-Neighbor ID     Pri   State           Dead Time   Address         Interface
-172.16.0.5        1   FULL/DR         00:00:34    10.0.0.1        GigabitEthernet0/0
-CSW-DC-01#show ip ospf interface brief
-Interface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C
-Vl999        1     0               10.0.99.1/24       1     DR    0/0
-Vl100        1     0               10.0.100.1/24      1     DR    0/0
-Vl20         1     0               10.0.20.1/24       1     DR    0/0
-Vl10         1     0               10.0.10.1/24       1     DR    0/0
-Gi0/0        1     0               10.0.0.2/30        1     BDR   1/1
-CSW-DC-01#show ip route ospf
-Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
-       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
-       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
-       E1 - OSPF external type 1, E2 - OSPF external type 2
-       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
-       ia - IS-IS inter area, * - candidate default, U - per-user static route
-       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
-       a - application route
-       + - replicated route, % - next hop override, p - overrides from PfR
-
-Gateway of last resort is 10.0.0.1 to network 0.0.0.0
-
-CSW-DC-01#show ip protocols
-*** IP Routing is NSF aware ***
-
-Routing Protocol is "application"
-  Sending updates every 0 seconds
-  Invalid after 0 seconds, hold down 0, flushed after 0
-  Outgoing update filter list for all interfaces is not set
-  Incoming update filter list for all interfaces is not set
-  Maximum path: 32
-  Routing for Networks:
-  Routing Information Sources:
-    Gateway         Distance      Last Update
-  Distance: (default is 4)
-
-Routing Protocol is "ospf 1"
-  Outgoing update filter list for all interfaces is not set
-  Incoming update filter list for all interfaces is not set
-  Router ID 10.0.100.1
-  Number of areas in this router is 1. 1 normal 0 stub 0 nssa
-  Maximum path: 4
-  Routing for Networks:
-  Routing on Interfaces Configured Explicitly (Area 0):
-    Vlan999
-    Vlan100
-    Vlan20
-    Vlan10
-    GigabitEthernet0/0
-  Routing Information Sources:
-    Gateway         Distance      Last Update
-  Distance: (default is 110)
-```
-
-Status: Passed
-
-## 5. Inter-Site ICMP Reachability Tests
-
-Test from Data Center to Site-A:
-
-```bash
-SRV-DC-01> ping 10.1.99.10
-
-84 bytes from 10.1.99.10 icmp_seq=1 ttl=60 time=10.385 ms
-84 bytes from 10.1.99.10 icmp_seq=2 ttl=60 time=12.793 ms
-84 bytes from 10.1.99.10 icmp_seq=3 ttl=60 time=12.189 ms
-84 bytes from 10.1.99.10 icmp_seq=4 ttl=60 time=8.837 ms
-84 bytes from 10.1.99.10 icmp_seq=5 ttl=60 time=14.370 ms
-```
-
-Test from Data Center to Site-B:
-
-```bash
-SRV-DC-01> ping 10.2.99.10
-
-84 bytes from 10.2.99.10 icmp_seq=1 ttl=60 time=16.976 ms
-84 bytes from 10.2.99.10 icmp_seq=2 ttl=60 time=14.561 ms
-84 bytes from 10.2.99.10 icmp_seq=3 ttl=60 time=15.282 ms
-84 bytes from 10.2.99.10 icmp_seq=4 ttl=60 time=9.750 ms
-84 bytes from 10.2.99.10 icmp_seq=5 ttl=60 time=15.977 ms
-```
-
-Test from Site-A to Site-B:
-
-```bash
-SRV-A-01> ping 10.2.99.10
-
-84 bytes from 10.2.99.10 icmp_seq=1 ttl=60 time=13.271 ms
-84 bytes from 10.2.99.10 icmp_seq=2 ttl=60 time=14.710 ms
-84 bytes from 10.2.99.10 icmp_seq=3 ttl=60 time=12.905 ms
-84 bytes from 10.2.99.10 icmp_seq=4 ttl=60 time=12.174 ms
-84 bytes from 10.2.99.10 icmp_seq=5 ttl=60 time=9.015 ms
+On each router:
 
 ```
-
-Expected result:
-
-* ICMP should succeed between the isolated lab endpoints because the VLAN 999 ACL explicitly permits ICMP.
-* These tests verify routing and return-path reachability.
-* These ping results do not demonstrate unrestricted TCP or UDP connectivity between the isolated VLANs.
-
-Status: Passed for the documented ICMP tests
-
-## 6. Default Route Verification
-
-Commands used:
-
-```cisco
-show ip route 0.0.0.0
+show ip route static
 ```
 
-Verifications:
+Expected: two summarised `/16` routes, and only those two. The floating
+backups have administrative distance 100, so while the tracked primaries are
+up they are not installed in the RIB and this command does not show them —
+`show running-config | include ^ip route` does.
 
-```cisco
-CSW-DC-01#show ip route 0.0.0.0
-Routing entry for 0.0.0.0/0, supernet
-  Known via "static", distance 1, metric 0, candidate default path
-  Routing Descriptor Blocks:
-  * 10.0.0.1
-      Route metric is 0, traffic share count is 1
+**Measured:** 2 of 2 summaries present on all three routers.
+
+Then the check the previous revision of this lab could not pass — reaching
+another site's **point-to-point link**, not just its VLANs:
+
+```
+CSW-A-01#ping 10.0.0.2
+CSW-DC-01#ping 10.2.0.2
 ```
 
-```cisco
-CSW-A-01#show ip route 0.0.0.0
-Routing entry for 0.0.0.0/0, supernet
-  Known via "static", distance 1, metric 0, candidate default path
-  Routing Descriptor Blocks:
-  * 10.1.0.1
-      Route metric is 0, traffic share count is 1
+**Measured:** 100% on all four tested pairs
+(`CSW-A-01 → 10.0.0.2`, `CSW-B-01 → 10.0.0.2`, `CSW-DC-01 → 10.1.0.2`,
+`CSW-DC-01 → 10.2.0.2`).
+
+And end to end, with the full path visible:
+
+```
+CSW-A-01#traceroute 10.2.0.2
+  1 10.1.0.1     (RTR-A-01)
+  2 172.16.0.10  (RTR-B-01, across the A-B WAN link)
+  3 10.2.0.2     (CSW-B-01)
 ```
 
-```cisco
-CSW-B-01#show ip route 0.0.0.0
-Routing entry for 0.0.0.0/0, supernet
-  Known via "static", distance 1, metric 0, candidate default path
-  Routing Descriptor Blocks:
-  * 10.2.0.1
-      Route metric is 0, traffic share count is 1
+## 6. VLAN 199 isolation
+
+The isolated VLAN must allow ICMP between isolated segments and nothing else,
+in **both** directions.
+
+### What is permitted
+
+From any isolated endpoint:
+
+```
+SRV-A-01> ping 10.0.199.10 -c 4
 ```
 
-Expected result:
+**Measured:** 4/4 on all six site pairs
+(DC→A, DC→B, A→DC, A→B, B→DC, B→A).
 
-* Each multilayer switch should have a static default route pointing toward its local site router.
+### What is denied
 
-Status: Passed
+VPCS can send TCP and UDP probes, which is what actually tests an ACL — a ping
+that succeeds proves nothing about the rest:
 
-## 7. Isolated VLAN Verification
-
-Commands used:
-
-```cisco
-show access-lists
-show running-config interface vlan 999
+```
+SRV-A-01> ping 10.0.199.10 -P 6 -p 80 -c 3
+SRV-A-01> ping 10.0.199.10 -P 17 -p 53 -c 3
 ```
 
-Verifications:
+Expected: **no reply from the destination**, and an ICMP type 3 code 13 from the
+gateway. A denied packet does not vanish silently — the SVI answers:
 
-```cisco
-CSW-DC-01#show access-lists
-Extended IP access list Vlan999_Isolated
-    10 permit icmp any any
-    20 deny ip any 10.0.0.0 0.255.255.255
-    30 deny ip any 172.16.0.0 0.15.255.255
-    40 deny ip any 192.168.0.0 0.0.255.255
-    50 permit ip any any
-CSW-DC-01#show running-config interface vlan 999
-Building configuration...
-
-Current configuration : 116 bytes
-!
-interface Vlan999
- ip address 10.0.99.1 255.255.255.0
- ip access-group Vlan999_isolated in
- ip ospf 1 area 0
-end
+```
+*10.1.199.1 tcp_seq=1 ttl=255 time=3.355 ms (ICMP type:3, code:13,
+ Communication administratively prohibited)
 ```
 
-```cisco
-CSW-A-01#show access-lists
-Extended IP access list Vlan999_Isolated
-    10 permit icmp any any
-    20 deny ip any 10.0.0.0 0.255.255.255
-    30 deny ip any 172.16.0.0 0.15.255.255
-    40 deny ip any 192.168.0.0 0.0.255.255
-    50 permit ip any any
-CSW-A-01#show running-config interface vlan 999
-Building configuration...
+**Measured:** 0 replies from the destination and 2–3 `administratively
+prohibited` messages per run, for both TCP/80 and UDP/53.
 
-Current configuration : 116 bytes
-!
-interface Vlan999
- ip address 10.1.99.1 255.255.255.0
- ip access-group Vlan999_isolated in
- ip ospf 1 area 0
-end
+That the ICMP error reaches the host at all is the outbound ACL working as
+designed: it permits `unreachable` and `ttl-exceeded` precisely so path errors
+still get through.
+
+### Counters
+
+```
+show access-lists ISOLATED-IN
 ```
 
-```cisco
-CSW-B-01#show access-lists
-Extended IP access list Vlan999_Isolated
-    10 permit icmp any any
-    20 deny ip any 10.0.0.0 0.255.255.255
-    30 deny ip any 172.16.0.0 0.15.255.255
-    40 deny ip any 192.168.0.0 0.0.255.255
-    50 permit ip any any
-CSW-B-01#show running-config interface vlan 999
-Building configuration...
+**Measured** on CSW-A-01 after the six permitted pairs and the denied probes:
 
-Current configuration : 116 bytes
-!
-interface Vlan999
- ip address 10.2.99.1 255.255.255.0
- ip access-group Vlan999_isolated in
- ip ospf 1 area 0
-end
+```
+Extended IP access list ISOLATED-IN
+    10 permit icmp 10.1.199.0 0.0.0.255 10.1.199.0 0.0.0.255
+    20 permit icmp 10.1.199.0 0.0.0.255 10.0.199.0 0.0.0.255 (9 matches)
+    30 permit icmp 10.1.199.0 0.0.0.255 10.2.199.0 0.0.0.255 (8 matches)
+    40 deny ip any any log (12 matches)
 ```
 
-Expected result:
+The counters are cumulative across verification passes, which is why entries
+20 and 30 read higher than the four pings of a single test. Entry 10 stays at
+zero on purpose: it covers traffic that never leaves the local isolated
+segment, so it is never exercised from another site.
 
-* The `Vlan999_Isolated` ACL should exist on each multilayer switch.
-* The ACL should be applied inbound on interface VLAN 999.
-* ICMP is explicitly permitted.
-* Non-ICMP IP traffic toward the listed private address ranges is denied.
-* The captured outputs verify the ACL configuration; a denied TCP or UDP traffic test was not captured.
+Non-zero counters on both the permit and the deny are the point. An ACL that has
+never matched anything has not been verified, only configured.
 
-Status: ACL configuration verified
+## 7. DHCP relay
 
-## 8. SSH Management Verification
+`SRV-DC-02` sits in VLAN 20 and takes its address from RTR-DC-01 through the
+relay on `CSW-DC-01 Vlan20`.
 
-This captured verification demonstrates SSH operation on `CSW-DC-01` as a representative multilayer switch.
-
-The published Access-switch configurations do not include management SVIs or default gateways, so remote SSH management of the Access switches is outside the documented scope.
-
-Commands used:
-
-```cisco
-show ip ssh
-show running-config | section line vty
+```
+SRV-DC-02> ip dhcp
+SRV-DC-02> show ip
+RTR-DC-01#show ip dhcp binding
 ```
 
-Verifications:
+**Measured:** the endpoint moved from its skeleton static `10.0.20.50` to
+`10.0.20.100` with `DOMAIN NAME : lab.example` learned from the pool, and the
+router registered the lease:
 
-```cisco
-CSW-DC-01#show ip ssh
-SSH Enabled - version 2.0
-Authentication methods:publickey,keyboard-interactive,password
-Authentication Publickey Algorithms:x509v3-ssh-rsa,ssh-rsa
-Hostkey Algorithms:x509v3-ssh-rsa,ssh-rsa
-Encryption Algorithms:aes128-ctr,aes192-ctr,aes256-ctr
-MAC Algorithms:hmac-sha1,hmac-sha1-96
-Authentication timeout: 120 secs; Authentication retries: 3
-Minimum expected Diffie Hellman key size : 1024 bits
-IOS Keys in SECSH format(ssh-rsa, base64 encoded): CSW-DC-01.administrator
-ssh-rsa ***********************************************************
-***********************************************************
-CSW-DC-01#show running-config | section line vty
-line vty 0 4
- exec-timeout 3 0
- login local
- transport input ssh
+```
+10.0.20.100         0100.5079.6668.0c       Sep 10 2026 03:45 AM    Automatic
 ```
 
-Expected result:
+The skeleton static is deliberately inside the pool's excluded range, so an
+address of `.100` can only have come from DHCP.
 
-* SSH version 2 should be enabled.
-* VTY lines should use local login.
-* Remote access should be limited to SSH.
+## 8. Management plane
 
-Status: Passed for the demonstrated multilayer switch
+### SSH into an access switch
 
-## 9. Final Result
+The previous revision of this lab configured SSH on switches that had no
+management SVI and no default gateway, so it could never be used. Now it can:
 
-The published configurations and captured verification outputs document:
+```
+CSW-DC-01#ssh -l netadmin 10.0.10.11
+```
 
-* VLAN segmentation
-* 802.1Q trunking
-* Native VLAN 99
-* Rapid-PVST operation
-* PortFast and BPDU Guard on configured end-device ports
-* Layer 3 routed links
-* Inter-VLAN routing configuration
-* OSPF configuration within each site
-* A captured FULL OSPF adjacency in the Data Center segment
-* Static routing between site routers
-* Static default routes on the multilayer switches
-* Inter-site ICMP reachability
-* VLAN 999 ACL configuration
-* SSH operation on the demonstrated multilayer switch
-* Basic enterprise LAN troubleshooting
+**Measured:** works from both multilayer switches into their access switches
+(`CSW-DC-01 → ASW-DC-01`, `CSW-A-01 → ASW-A-01`), reaching an enabled prompt and
+running `show version`.
 
-Final status: Passed for the documented tests
+### The VTY ACL actually rejects
+
+From a device whose source address is outside the management VLANs:
+
+```
+RTR-A-01#ssh -l netadmin 10.0.10.11
+```
+
+**Measured:** connection refused by `access-class MGMT-VTY in` — no password
+prompt is ever offered.
+
+### NTP
+
+```
+show ntp status
+```
+
+**Measured:** 10 of 10 devices synchronised. RTR-DC-01 is the reference at
+stratum 3 (`ntp master 3`); the other nine sit at stratum 4 with
+`reference is 10.0.255.1`.
+
+NTP needs time. For the first several minutes the clients show
+`Clock is unsynchronized` with `loopfilter state is 'FREQ' (Drift being
+measured)` even though the association is already correct — that is normal, not
+a fault. Give it fifteen minutes before concluding anything.
+
+## 9. Failure test — the point of the WAN triangle
+
+Shut the direct Site-A ↔ Data Center link and confirm traffic reroutes through
+Site-B.
+
+```
+RTR-A-01(config)# interface GigabitEthernet0/1
+RTR-A-01(config-if)# shutdown
+```
+
+**Measured:**
+
+| | Before | Link down | Restored |
+|---|---|---|---|
+| `10.0.0.0/16` next hop on RTR-A-01 | `172.16.0.1` (direct) | `172.16.0.10` (via Site-B) | `172.16.0.1` |
+| Path from CSW-A-01 | `10.1.0.1 → 172.16.0.1 → 10.0.0.2` | `10.1.0.1 → 172.16.0.10 → 172.16.0.5 → 10.0.0.2` | — |
+| Ping SRV-A-01 → SRV-DC-01 | 5/5 | **8/8, no loss** | 5/5 |
+| Track state | 2 Up | down after **10 s** | up after **20 s** |
+
+Restore the interface before moving on, and do not save while it is shut.
+
+**This test cannot pass without the IP SLA probes.** EVE-NG links are bridges and
+a bridge does not propagate link-down: the far end stays `up/up`, the connected
+route stays in the table, and an untracked static route is never withdrawn. The
+failure then looks like a design bug when it is a simulator artefact.
+
+### The limitation this test does not cover
+
+If an entire **site router** fails rather than a link, the two surviving routers
+each install their floating route toward the other, and packets for the dead site
+loop until the TTL expires. That is the known cost of floating statics without a
+routing protocol, and it is why Lab 02 runs OSPF end to end.
+
+## 10. Troubleshooting notes
+
+Real problems hit while building this lab, and what each one actually was.
+
+**Port-channels stuck with members suspended.** Both ends configured
+`channel-group N mode active`, both ends showing `(s)`, and `show lacp neighbor`
+empty on both sides. It is not a configuration error: **LACP frames do not cross
+the EVE-NG bridges.** Three tests isolate it — removing the `channel-group`
+brings the plain trunk up with CDP working; identical LACP config on both ends
+still shows no neighbour; `mode on` bundles immediately. STP and CDP cross the
+same links fine, so it is specific to the slow-protocols multicast address LACP
+uses. The bundles in this lab are static as a result.
+
+**A second member suspended while the first bundles.** Different cause, same
+symptom: the members of one port-channel must have **identical** switchport
+configuration. Removing `switchport nonegotiate` from one member only is enough
+to break it.
+
+**`no channel-group 1` is rejected as incomplete.** On IOSvL2 the command is
+`no channel-group`, with no number.
+
+**`traceroute` missing its last hop.** Two separate causes, both harmless.
+IOS answers the final hop from the interface the packet **arrives on**, not from
+the destination address, so a traceroute to a device's far-side interface never
+shows that address. And IOS rate-limits ICMP unreachables to one per 500 ms, so
+two traceroutes fired back to back at the same target leave the last hop blank —
+wait about ten seconds between runs.
+
+**`!A` at the end of a traceroute into VLAN 199.** That is the isolation ACL
+rejecting the UDP probe, which is correct behaviour and further proof the filter
+works.
+
+**Configuration applying extremely slowly on the routers only.** Automation that
+waits for a `(config...)#` prompt stalls on `ip dhcp pool`, because the DHCP pool
+sub-mode prompt is `(dhcp-config)#` — it does not start with `config`. The
+switches, having no pools, were unaffected.
+
+## 11. Result
+
+| Area | Result |
+|---|---|
+| Nodes booted with their own configuration | 14 / 14 |
+| Addressing and interface state | 37 addresses, 0 interfaces down |
+| EtherChannel | 8 bundles `(SU)`, 16 members `(P)` |
+| Spanning tree | multilayer switch root in all three sites |
+| OSPF | 3 adjacencies, 6 endpoints FULL |
+| Inter-site routing incl. transit `/30`s | 100% on 4 pairs, full traceroute |
+| VLAN 199 permitted ICMP | 6 site pairs, 4/4 each |
+| VLAN 199 denied TCP and UDP | 0 replies from destination, ACL counters non-zero |
+| DHCP relay | lease issued and registered |
+| SSH into an access switch | works; VTY ACL rejects other sources |
+| NTP | 10 / 10 synchronised |
+| WAN link failure | reroutes via Site-B, no packet loss |
+
+**Total: 44 automated checks, 0 failures**, plus the six-point failure test.

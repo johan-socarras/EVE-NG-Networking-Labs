@@ -6,22 +6,25 @@ The purpose of this repository is to demonstrate practical networking skills thr
 
 ## Featured Labs
 
-### 1. Three-Tier Enterprise LAN
+### 1. Collapsed-Core Enterprise LAN
 
-A documented enterprise LAN built with Core, Distribution, and Access layers.
+A three-site enterprise LAN: access switches, a multilayer switch per site doing
+both distribution and core, and site routers meshed in a WAN triangle. Inter-site
+routing is static, summarised per site, and tied to IP SLA probes so a failed
+link is actually withdrawn.
 
 Technologies practiced:
 
-- VLAN segmentation
-- 802.1Q trunks
-- Rapid-PVST
-- EtherChannel
-- OSPF Area 0
-- DHCP relay
-- NAT/PAT
-- ACLs
-- SSH management
-- Port security
+- VLAN segmentation and 802.1Q trunking
+- Rapid-PVST with deterministic root placement
+- EtherChannel between access and multilayer
+- OSPF area 0 within each site, authenticated, with pinned router IDs
+- Summarised static routing with IP SLA, object tracking and floating backups
+- DHCP relay, with the pools on the site routers
+- Bidirectional ACL filtering on an isolated VLAN
+- Port security, DHCP snooping and Dynamic ARP Inspection
+- SSH-only management with a VTY access-class
+- NTP hierarchy
 
 [View Lab](01-three-tier-enterprise-lan/README.md)
 
@@ -56,6 +59,9 @@ Technologies practiced:
 - VLANs and Layer 2 segmentation
 - Dynamic and static routing
 - First-hop redundancy
+- Route summarisation and floating static routes
+- Path liveness detection with IP SLA and object tracking
+- Layer 2 hardening: port security, DHCP snooping, DAI
 - Firewall traffic control
 - NAT and ACL implementation
 - Network troubleshooting and verification

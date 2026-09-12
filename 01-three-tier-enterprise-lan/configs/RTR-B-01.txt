@@ -1,140 +1,123 @@
-RTR-B-01#sh run
-Building configuration...
-
-
-Current configuration : 2214 bytes
 !
-! Last configuration change at 18:40:50 UTC Wed Jun 24 2026
+! RTR-B-01 - sanitized device configuration
+! Lab 01 - collapsed-core enterprise LAN
 !
-version 15.9
-service timestamps debug datetime msec
-service timestamps log datetime msec
-no service password-encryption
+ NVRAM config last updated at 04:41:22 UTC Thu Sep 10 2026 by netadmin
+!
+service timestamps debug datetime msec localtime
+service timestamps log datetime msec localtime
+service password-encryption
 !
 hostname RTR-B-01
 !
-boot-start-marker
-boot-end-marker
+logging buffered 32768 informational
+logging console warnings
+enable secret 9 <REDACTED>
 !
+ip dhcp excluded-address 10.2.20.1 10.2.20.99
+ip dhcp excluded-address 10.2.30.1 10.2.30.99
 !
-enable secret 9 ******************
+ip dhcp pool SITE-B-VLAN20
+ network 10.2.20.0 255.255.255.0
+ default-router 10.2.20.1
+ domain-name lab.example
+ lease 0 8
 !
-no aaa new-model
-!
-!
-!
-mmi polling-interval 60
-no mmi auto-configure
-no mmi pvc
-mmi snmp-timeout 180
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
+ip dhcp pool SITE-B-VLAN30
+ network 10.2.30.0 255.255.255.0
+ default-router 10.2.30.1
+ domain-name lab.example
+ option 150 ip 10.2.100.10
+ lease 0 8
 !
 no ip domain lookup
-ip domain name admin
-ip cef
-no ipv6 cef
+ip domain name lab.example
 !
-multilink bundle-name authenticated
+username netadmin privilege 15 secret 9 <REDACTED>
 !
+track 1 ip sla 1 reachability
 !
+track 2 ip sla 2 reachability
 !
-!
-username *********** privilege 15 password 0 *********
-!
-redundancy
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
+interface Loopback0
+ description OSPF_ROUTER_ID
+ ip address 10.2.255.1 255.255.255.255
+ ip ospf 1 area 0
 !
 interface GigabitEthernet0/0
+ description L3_LINK_TO_RTR-DC-01_Gi0/1
  ip address 172.16.0.6 255.255.255.252
- duplex auto
- speed auto
- media-type rj45
 !
 interface GigabitEthernet0/1
+ description L3_LINK_TO_RTR-A-01_Gi0/0
  ip address 172.16.0.10 255.255.255.252
- duplex auto
- speed auto
- media-type rj45
 !
 interface GigabitEthernet0/2
+ description L3_LINK_TO_CSW-B-01_Gi0/0
  ip address 10.2.0.1 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 7 <REDACTED>
+ ip ospf network point-to-point
  ip ospf 1 area 0
- duplex auto
- speed auto
- media-type rj45
 !
 interface GigabitEthernet0/3
+ description UNUSED
  no ip address
  shutdown
- duplex auto
- speed auto
- media-type rj45
 !
 router ospf 1
-!
-ip forward-protocol nd
-!
+ router-id 10.2.255.1
+ passive-interface default
+ no passive-interface GigabitEthernet0/2
 !
 no ip http server
 no ip http secure-server
-ip route 10.0.10.0 255.255.255.0 172.16.0.5
-ip route 10.0.20.0 255.255.255.0 172.16.0.5
-ip route 10.0.99.0 255.255.255.0 172.16.0.5
-ip route 10.0.100.0 255.255.255.0 172.16.0.5
-ip route 10.1.10.0 255.255.255.0 172.16.0.9
-ip route 10.1.20.0 255.255.255.0 172.16.0.9
-ip route 10.1.99.0 255.255.255.0 172.16.0.9
-ip route 10.1.100.0 255.255.255.0 172.16.0.9
+ip route 10.0.0.0 255.255.0.0 172.16.0.5 track 1
+ip route 10.1.0.0 255.255.0.0 172.16.0.9 track 2
+ip route 10.0.0.0 255.255.0.0 172.16.0.9 100
+ip route 10.1.0.0 255.255.0.0 172.16.0.5 100
+ip ssh time-out 60
 ip ssh version 2
+ip ssh server algorithm mac hmac-sha2-256 hmac-sha2-512
+ip ssh server algorithm encryption aes256-ctr aes192-ctr aes128-ctr
+ip ssh client algorithm mac hmac-sha2-256 hmac-sha2-512
+ip ssh client algorithm encryption aes256-ctr aes192-ctr aes128-ctr
 !
-ipv6 ioam timestamp
+ip access-list standard MGMT-VTY
+ remark Management VLANs of the three sites only
+ permit 10.0.10.0 0.0.0.255
+ permit 10.1.10.0 0.0.0.255
+ permit 10.2.10.0 0.0.0.255
+ deny   any log
 !
+ip sla 1
+ icmp-echo 172.16.0.5 source-interface GigabitEthernet0/0
+ frequency 5
+ip sla schedule 1 life forever start-time now
+ip sla 2
+ icmp-echo 172.16.0.9 source-interface GigabitEthernet0/1
+ frequency 5
+ip sla schedule 2 life forever start-time now
 !
-!
-control-plane
-!
-banner motd ^C
-
-**********************************************************************
-* *
-* UNAUTHORIZED ACCESS PROHIBITED                *
-* *
-* This system is for the use of authorized users only. Individuals  *
-* using this computer system without authority, or in excess of     *
-* their authority, are subject to having all of their activities    *
-* monitored and recorded by system personnel.                       *
-* *
-**********************************************************************^C
+banner motd ^CC UNAUTHORIZED ACCESS PROHIBITED - This system is for the use of authorized users only. All activity is monitored and recorded. ^C
 !
 line con 0
-line aux 0
+ exec-timeout 5 0
+ logging synchronous
+ login local
 line vty 0 4
- exec-timeout 3 0
+ access-class MGMT-VTY in
+ exec-timeout 5 0
+ logging synchronous
+ login local
+ transport input ssh
+ transport output ssh
+line vty 5 15
+ access-class MGMT-VTY in
+ exec-timeout 5 0
  login local
  transport input ssh
 !
-no scheduler allocate
+ntp server 10.0.255.1
 !
 end

@@ -1,45 +1,37 @@
-ASW-B-01#sh run
-Building configuration...
-
-Current configuration : 2269 bytes
 !
-! Last configuration change at 18:08:27 UTC Wed Jun 24 2026
+! ASW-B-01 - sanitized device configuration
+! Lab 01 - collapsed-core enterprise LAN
 !
-version 15.2
-service timestamps debug datetime msec
-service timestamps log datetime msec
-no service password-encryption
-service compress-config
+ NVRAM config last updated at 04:41:34 UTC Thu Sep 10 2026 by netadmin
+!
+service timestamps debug datetime msec localtime
+service timestamps log datetime msec localtime
+service password-encryption
 !
 hostname ASW-B-01
 !
-boot-start-marker
-boot-end-marker
+logging buffered 32768 informational
+logging console warnings
+enable secret 9 <REDACTED>
 !
-!
-enable secret 5 ************
-!
-username ******* privilege 15 password 0 ********
-no aaa new-model
-!
-!
-!
-!
+username netadmin privilege 15 secret 9 <REDACTED>
 !
 vtp mode off
+no ip routing
+ip arp inspection vlan 20,30
+ip arp inspection validate src-mac dst-mac ip
 !
-!
-!
+ip dhcp snooping vlan 20,30
+no ip dhcp snooping information option
+ip dhcp snooping
 no ip domain-lookup
-ip domain-name admin
-ip cef
-no ipv6 cef
-!
-!
+ip domain-name lab.example
 !
 spanning-tree mode rapid-pvst
+spanning-tree loopguard default
+spanning-tree portfast edge default
+spanning-tree portfast edge bpduguard default
 spanning-tree extend system-id
-!
 !
 vlan 10
  name Management
@@ -51,96 +43,139 @@ vlan 30
  name Voice
 !
 vlan 99
- name Native-trunk
+ name Native-Trunk
 !
 vlan 100
  name Server
 !
-vlan 999
+vlan 199
  name Isolated-Lab
 !
+vlan 1000
+ name Unused-Parking
 !
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-interface GigabitEthernet0/0
- description to CSW-B-01
- switchport trunk allowed vlan 10,20,30,99,100,999
+interface Port-channel1
+ switchport trunk allowed vlan 10,20,30,99,100,199
  switchport trunk encapsulation dot1q
  switchport trunk native vlan 99
  switchport mode trunk
- negotiation auto
+ switchport nonegotiate
+ ip arp inspection trust
+ ip dhcp snooping trust
+!
+interface GigabitEthernet0/0
+ description To CSW-B-01 Gi0/1 (Po1 member)
+ switchport trunk allowed vlan 10,20,30,99,100,199
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 99
+ switchport mode trunk
+ switchport nonegotiate
+ ip arp inspection trust
+ channel-group 1 mode on
+ ip dhcp snooping trust
 !
 interface GigabitEthernet0/1
- description to SRV-B-01
- switchport access vlan 999
+ description To SRV-B-01
+ switchport access vlan 199
  switchport mode access
- switchport voice vlan 30
- negotiation auto
+ switchport nonegotiate
+ switchport port-security maximum 2
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky
+ switchport port-security mac-address sticky
+ switchport port-security aging time 5
+ switchport port-security aging type inactivity
+ switchport port-security
  spanning-tree portfast edge
  spanning-tree bpduguard enable
 !
 interface GigabitEthernet0/2
- negotiation auto
+ description UNUSED - parked
+ switchport access vlan 1000
+ switchport mode access
+ switchport nonegotiate
+ shutdown
 !
 interface GigabitEthernet0/3
- negotiation auto
+ description UNUSED - parked
+ switchport access vlan 1000
+ switchport mode access
+ switchport nonegotiate
+ shutdown
 !
 interface GigabitEthernet1/0
- negotiation auto
+ description To CSW-B-01 Gi1/0 (Po1 member)
+ switchport trunk allowed vlan 10,20,30,99,100,199
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 99
+ switchport mode trunk
+ switchport nonegotiate
+ ip arp inspection trust
+ channel-group 1 mode on
+ ip dhcp snooping trust
 !
 interface GigabitEthernet1/1
- negotiation auto
+ description UNUSED - parked
+ switchport access vlan 1000
+ switchport mode access
+ switchport nonegotiate
+ shutdown
 !
 interface GigabitEthernet1/2
- negotiation auto
+ description UNUSED - parked
+ switchport access vlan 1000
+ switchport mode access
+ switchport nonegotiate
+ shutdown
 !
 interface GigabitEthernet1/3
- negotiation auto
+ description UNUSED - parked
+ switchport access vlan 1000
+ switchport mode access
+ switchport nonegotiate
+ shutdown
 !
-ip forward-protocol nd
+interface Vlan10
+ description Management
+ ip address 10.2.10.11 255.255.255.0
+!
+ip default-gateway 10.2.10.1
 !
 no ip http server
+no ip http secure-server
 !
+ip ssh time-out 60
 ip ssh version 2
-ip ssh server algorithm encryption aes128-ctr aes192-ctr aes256-ctr
-ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+ip ssh dh min size 2048
+ip ssh server algorithm encryption aes256-ctr aes192-ctr aes128-ctr
+ip ssh client algorithm encryption aes256-ctr aes192-ctr aes128-ctr
 !
+ip access-list standard MGMT-VTY
+ remark Management VLANs of the three sites only
+ permit 10.0.10.0 0.0.0.255
+ permit 10.1.10.0 0.0.0.255
+ permit 10.2.10.0 0.0.0.255
+ deny   any log
 !
-!
-!
-!
-!
-control-plane
-!
-banner motd ^C
-
-**********************************************************************
-* *
-* UNAUTHORIZED ACCESS PROHIBITED                *
-* *
-* This system is for the use of authorized users only. Individuals  *
-* using this computer system without authority, or in excess of     *
-* their authority, are subject to having all of their activities    *
-* monitored and recorded by system personnel.                       *
-* *
-**********************************************************************^C
+banner motd ^CC UNAUTHORIZED ACCESS PROHIBITED - This system is for the use of authorized users only. All activity is monitored and recorded. ^C
 !
 line con 0
-line aux 0
+ exec-timeout 5 0
+ logging synchronous
+ login local
 line vty 0 4
- exec-timeout 3 0
+ access-class MGMT-VTY in
+ exec-timeout 5 0
+ logging synchronous
+ login local
+ transport input ssh
+ transport output ssh
+line vty 5 15
+ access-class MGMT-VTY in
+ exec-timeout 5 0
  login local
  transport input ssh
 !
+ntp server 10.0.255.1
 !
 end

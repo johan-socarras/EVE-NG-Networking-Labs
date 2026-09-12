@@ -1,46 +1,30 @@
-CSW-B-01#sh run
-Building configuration...
-
-Current configuration : 2879 bytes
 !
-! Last configuration change at 18:08:20 UTC Wed Jun 24 2026
+! CSW-B-01 - sanitized device configuration
+! Lab 01 - collapsed-core enterprise LAN
 !
-version 15.2
-service timestamps debug datetime msec
-service timestamps log datetime msec
-no service password-encryption
-service compress-config
+ NVRAM config last updated at 04:41:27 UTC Thu Sep 10 2026 by netadmin
+!
+service timestamps debug datetime msec localtime
+service timestamps log datetime msec localtime
+service password-encryption
 !
 hostname CSW-B-01
 !
-boot-start-marker
-boot-end-marker
+logging buffered 32768 informational
+logging console warnings
+enable secret 9 <REDACTED>
 !
-!
-enable secret 5 **********************
-!
-username ******** privilege 15 password 0 **********
-no aaa new-model
-!
-!
-!
-!
+username netadmin privilege 15 secret 9 <REDACTED>
 !
 vtp mode off
 !
-!
-!
 no ip domain-lookup
-ip domain-name admin
-ip cef
-no ipv6 cef
-!
-!
+ip domain-name lab.example
 !
 spanning-tree mode rapid-pvst
+spanning-tree loopguard default
 spanning-tree extend system-id
-spanning-tree vlan 1-999 priority 24576
-!
+spanning-tree vlan 1-1005 priority 24576
 !
 vlan 10
  name Management
@@ -52,126 +36,176 @@ vlan 30
  name Voice
 !
 vlan 99
- name Native-trunk
+ name Native-Trunk
 !
 vlan 100
  name Server
 !
-vlan 999
+vlan 199
  name Isolated-Lab
 !
+vlan 1000
+ name Unused-Parking
 !
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-interface GigabitEthernet0/0
- description to RTR-B-01
- no switchport
- ip address 10.2.0.2 255.255.255.252
+interface Loopback0
+ description OSPF_ROUTER_ID
+ ip address 10.2.255.2 255.255.255.255
  ip ospf 1 area 0
- negotiation auto
 !
-interface GigabitEthernet0/1
- description to ASW-B-01
- switchport trunk allowed vlan 10,20,30,99,100,999
+interface Port-channel1
+ switchport trunk allowed vlan 10,20,30,99,100,199
  switchport trunk encapsulation dot1q
  switchport trunk native vlan 99
  switchport mode trunk
- negotiation auto
+ switchport nonegotiate
+ spanning-tree guard root
+!
+interface GigabitEthernet0/0
+ description To RTR-B-01 Gi0/2
+ no switchport
+ ip address 10.2.0.2 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 7 <REDACTED>
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/1
+ description To ASW-B-01 Gi0/0 (Po1 member)
+ switchport trunk allowed vlan 10,20,30,99,100,199
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 99
+ switchport mode trunk
+ switchport nonegotiate
+ channel-group 1 mode on
 !
 interface GigabitEthernet0/2
+ description UNUSED - parked
+ switchport access vlan 1000
+ switchport mode access
+ switchport nonegotiate
  shutdown
- negotiation auto
 !
 interface GigabitEthernet0/3
+ description UNUSED - parked
+ switchport access vlan 1000
+ switchport mode access
+ switchport nonegotiate
  shutdown
- negotiation auto
 !
 interface GigabitEthernet1/0
- shutdown
- negotiation auto
+ description To ASW-B-01 Gi1/0 (Po1 member)
+ switchport trunk allowed vlan 10,20,30,99,100,199
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 99
+ switchport mode trunk
+ switchport nonegotiate
+ channel-group 1 mode on
 !
 interface GigabitEthernet1/1
+ description UNUSED - parked
+ switchport access vlan 1000
+ switchport mode access
+ switchport nonegotiate
  shutdown
- negotiation auto
 !
 interface GigabitEthernet1/2
+ description UNUSED - parked
+ switchport access vlan 1000
+ switchport mode access
+ switchport nonegotiate
  shutdown
- negotiation auto
 !
 interface GigabitEthernet1/3
+ description UNUSED - parked
+ switchport access vlan 1000
+ switchport mode access
+ switchport nonegotiate
  shutdown
- negotiation auto
 !
 interface Vlan10
+ description Management
  ip address 10.2.10.1 255.255.255.0
  ip ospf 1 area 0
 !
 interface Vlan20
+ description Data
  ip address 10.2.20.1 255.255.255.0
+ ip helper-address 10.2.255.1
+ ip ospf 1 area 0
+!
+interface Vlan30
+ description Voice
+ ip address 10.2.30.1 255.255.255.0
+ ip helper-address 10.2.255.1
  ip ospf 1 area 0
 !
 interface Vlan100
+ description Server
  ip address 10.2.100.1 255.255.255.0
  ip ospf 1 area 0
 !
-interface Vlan999
- ip address 10.2.99.1 255.255.255.0
- ip access-group Vlan999_Isolated in
+interface Vlan199
+ description Isolated-Lab
+ ip address 10.2.199.1 255.255.255.0
+ ip access-group ISOLATED-IN in
+ ip access-group ISOLATED-OUT out
  ip ospf 1 area 0
 !
 router ospf 1
-!
-ip forward-protocol nd
+ router-id 10.2.255.2
+ passive-interface default
+ no passive-interface GigabitEthernet0/0
 !
 no ip http server
+no ip http secure-server
 !
 ip route 0.0.0.0 0.0.0.0 10.2.0.1
+ip ssh time-out 60
 ip ssh version 2
-ip ssh server algorithm encryption aes128-ctr aes192-ctr aes256-ctr
-ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+ip ssh dh min size 2048
+ip ssh server algorithm encryption aes256-ctr aes192-ctr aes128-ctr
+ip ssh client algorithm encryption aes256-ctr aes192-ctr aes128-ctr
 !
-ip access-list extended Vlan999_Isolated
- permit icmp any any
- deny   ip any 10.0.0.0 0.255.255.255
- deny   ip any 172.16.0.0 0.15.255.255
- deny   ip any 192.168.0.0 0.0.255.255
- permit ip any any
+ip access-list standard MGMT-VTY
+ remark Management VLANs of the three sites only
+ permit 10.0.10.0 0.0.0.255
+ permit 10.1.10.0 0.0.0.255
+ permit 10.2.10.0 0.0.0.255
+ deny   any log
 !
+ip access-list extended ISOLATED-IN
+ remark ICMP toward the other isolated segments only; everything else is denied and logged
+ permit icmp 10.2.199.0 0.0.0.255 10.2.199.0 0.0.0.255
+ permit icmp 10.2.199.0 0.0.0.255 10.0.199.0 0.0.0.255
+ permit icmp 10.2.199.0 0.0.0.255 10.1.199.0 0.0.0.255
+ deny   ip any any log
+ip access-list extended ISOLATED-OUT
+ remark ICMP replies from the isolated segments plus path errors only
+ permit icmp 10.0.199.0 0.0.0.255 10.2.199.0 0.0.0.255
+ permit icmp 10.1.199.0 0.0.0.255 10.2.199.0 0.0.0.255
+ permit icmp any 10.2.199.0 0.0.0.255 ttl-exceeded
+ permit icmp any 10.2.199.0 0.0.0.255 unreachable
+ deny   ip any any log
 !
-!
-!
-!
-control-plane
-!
-banner motd ^C
-
-**********************************************************************
-* *
-* UNAUTHORIZED ACCESS PROHIBITED                *
-* *
-* This system is for the use of authorized users only. Individuals  *
-* using this computer system without authority, or in excess of     *
-* their authority, are subject to having all of their activities    *
-* monitored and recorded by system personnel.                       *
-* *
-**********************************************************************^C
+banner motd ^CC UNAUTHORIZED ACCESS PROHIBITED - This system is for the use of authorized users only. All activity is monitored and recorded. ^C
 !
 line con 0
-line aux 0
+ exec-timeout 5 0
+ logging synchronous
+ login local
 line vty 0 4
- exec-timeout 3 0
+ access-class MGMT-VTY in
+ exec-timeout 5 0
+ logging synchronous
+ login local
+ transport input ssh
+ transport output ssh
+line vty 5 15
+ access-class MGMT-VTY in
+ exec-timeout 5 0
  login local
  transport input ssh
 !
+ntp server 10.0.255.1
 !
 end

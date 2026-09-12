@@ -1,0 +1,45 @@
+!
+! ASW-DC-01 - startup base (lab skeleton, no protocols)
+!
+hostname ASW-DC-01
+!
+no ip domain-lookup
+no ip routing
+!
+interface GigabitEthernet0/0
+ description TO_CSW-DC-01_Gi0/1
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description TO_SRV-DC-01_eth0
+ no shutdown
+!
+interface GigabitEthernet0/2
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet0/3
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/0
+ description TO_CSW-DC-01_Gi1/0
+ no shutdown
+!
+interface GigabitEthernet1/1
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/2
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/3
+ description UNUSED
+ shutdown
+!
+line console 0
+ logging synchronous
+ exec-timeout 0 0
+!
+end
