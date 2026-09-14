@@ -15,16 +15,6 @@ answering.
 ![Topology](topology.png)
 
 
-## About the name
-
-An earlier revision of this lab called itself *three-tier*. It was not, and
-this one does not claim to be: the real chain is **access switch → site
-multilayer switch → site router**, a collapsed core with no separate
-distribution layer. *Multi-site* is the part that matters — three of those
-sites meshed in a WAN triangle, which is what the failure test in
-[`verification.md`](verification.md) exercises. The design did not change
-between revisions; the description did.
-
 ## Layers
 
 **Site router — `RTR-DC-01`, `RTR-A-01`, `RTR-B-01`.** IOSv routers, fully
