@@ -1,46 +1,62 @@
 !
-! A-SW-2 - Sanitized Device Configuration
+! A-SW-2 - sanitized device configuration
+! Lab 02 - three-tier architecture with L3 redundancy
 !
 hostname A-SW-2
 !
+vtp mode transparent
+!
 no ip domain-lookup
 !
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+!
 vlan 20
- name USERS-20
+ name VLAN20
 !
 interface GigabitEthernet0/0
- description TRUNK_TO_D-SW-1
+ description To D-SW-1 Gi1/1
+ switchport trunk allowed vlan 20
  switchport trunk encapsulation dot1q
  switchport mode trunk
- switchport trunk allowed vlan 20
- no shutdown
 !
 interface GigabitEthernet0/1
- description TRUNK_TO_D-SW-2
+ description To D-SW-2 Gi1/1
+ switchport trunk allowed vlan 20
  switchport trunk encapsulation dot1q
  switchport mode trunk
- switchport trunk allowed vlan 20
- no shutdown
 !
 interface GigabitEthernet0/2
- description USER_ACCESS_PORT
- switchport mode access
+ description To PC-3
  switchport access vlan 20
- spanning-tree portfast
+ switchport mode access
+ spanning-tree portfast edge
  spanning-tree bpduguard enable
- no shutdown
+!
+interface GigabitEthernet0/3
+ description To PC-4
+ switchport access vlan 20
+ switchport mode access
+ spanning-tree portfast edge
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/0
+!
+interface GigabitEthernet1/1
+!
+interface GigabitEthernet1/2
+!
+interface GigabitEthernet1/3
 !
 interface Vlan20
- description MANAGEMENT_INTERFACE
+ description Management
  ip address 10.10.20.10 255.255.255.0
- no shutdown
 !
 ip default-gateway 10.10.20.1
 !
-spanning-tree mode rapid-pvst
-!
-line console 0
- logging synchronous
+line con 0
  exec-timeout 0 0
+ logging synchronous
+line vty 0 4
 !
 end

@@ -1,544 +1,231 @@
-# Network Verification
+# Verification — Lab 02
 
-## Overview
+Run these in order. Each step assumes the previous one passed; if one fails,
+fix it before moving on, because later checks depend on it.
 
-This document provides the commands and validation steps used to verify the three-tier network design.
+Console ports are assigned by EVE-NG in node order, starting at 32769:
+`ISP-1 32769, ISP-2 32770, C-SW-1 32771, C-SW-2 32772, D-SW-1 32773,
+D-SW-2 32774, A-SW-1..4 32775-32778, PC-1..8 32779-32786`. Reaching them with
+`telnet <eve-ip> <port>` is often quicker than the HTML5 console.
 
-The verification process covers:
+## 0. Nodes booted with their configuration
 
-- Interface status
-- VLAN and trunk operation
-- Spanning Tree
-- Layer 3 transit links
-- OSPF adjacencies
-- Routing tables
-- HSRP on the Internet-facing segment
-- Inter-VLAN communication
-- End-to-end connectivity
-- Routed-link failover
-- Access-uplink failover
-- Core-side HSRP failover
+```
+show running-config | include hostname
+```
 
-## Verification Summary
+Expected: the device's own hostname. A node answering `Switch>` booted with the
+factory config — EVE-NG only injects the startup-config into a node that boots
+clean. Stop it, **Wipe** it, start it again.
 
-| Verification Area | Validation Criteria |
+If a node refuses to start at all (EVE-NG reports "started" but no qemu process
+appears and the console port stays closed), wipe it too. A node that keeps
+failing after a wipe can be deleted and recreated; the point-to-point networks
+survive the deletion, so the replacement only needs its interfaces reconnected.
+Note that a recreated node reusing the same node ID also reuses the old working
+directory — wipe it once more after recreating it.
+
+## 1. Addressing and interface state
+
+On each Core and Distribution device:
+
+```
+show ip interface brief | exclude unassigned
+```
+
+Expected — every listed interface `up/up`, matching
+[`addressing-plan.md`](addressing-plan.md):
+
+| Device | Expected |
 |---|---|
-| Physical and logical interfaces | Required interfaces must be operational |
-| VLAN configuration | VLANs 10, 20, 30, and 40 must exist on the appropriate switches |
-| Trunk links | Access-to-Distribution trunks must carry the assigned VLAN |
-| Rapid-PVST | One Access uplink must forward while the alternate remains available |
-| Layer 3 transit links | Core and Distribution routed interfaces must be operational |
-| OSPF neighbors | Core and Distribution switches must establish the expected adjacencies |
-| OSPF routes | Loopback, transit, VLAN, and default routes must be learned correctly |
-| HSRP | C-SW-1 should be Active and C-SW-2 Standby for `192.168.116.101` |
-| Inter-VLAN routing | Hosts in different VLANs must communicate through the Distribution layer |
-| Simulated Internet reachability | Internal hosts must reach the simulated Internet node |
-| Routed-link redundancy | Traffic must use an alternate OSPF path after a routed-link failure |
-| Access-uplink redundancy | The alternate trunk must forward after the active trunk fails |
-| HSRP failover | C-SW-2 must assume the Active role if C-SW-1 becomes unavailable |
+| C-SW-1 | `Gi0/0 192.0.2.1`, `Gi0/1 10.0.0.1`, `Gi0/2 10.0.0.5`, `Gi0/3 10.0.0.21`, `Lo0 10.222.0.1` |
+| C-SW-2 | `Gi0/0 198.51.100.1`, `Gi0/1 10.0.0.13`, `Gi0/2 10.0.0.9`, `Gi0/3 10.0.0.22`, `Lo0 10.222.0.2` |
+| D-SW-1 | `Gi0/2 10.0.0.2`, `Gi0/3 10.0.0.10`, `Lo0 10.222.0.3`, plus `Vlan10/20/30/40` |
+| D-SW-2 | `Gi0/2 10.0.0.14`, `Gi0/3 10.0.0.6`, `Lo0 10.222.0.4`, plus `Vlan10/20/30/40` |
 
----
+An interface showing `administratively down` is missing its `no shutdown`. One
+that is `up/down` is cabled to the wrong peer — check the interface map.
 
-## 1. Interface Status
-
-### Core and Distribution switches
-
-Run:
-
-```cisco
-show ip interface brief
-```
-
-Expected result:
-
-- Loopback interfaces are up/up.
-- Core-to-Distribution routed interfaces are up/up.
-- The Distribution interconnection is up/up.
-- The Internet-facing interfaces on both Core switches are up/up.
-- Required VLAN interfaces are up/up.
-
-### Access switches
-
-Run:
-```cisco
-show interfaces status
-```
-
-Expected result:
-
-- Both Distribution uplinks are connected.
-- The user-facing access port is connected when an end device is active.
-- No required interface is administratively disabled.
-
-## 2. VLAN Verification
-
-Run on the Distribution and Access switches:
-
-```cisco
-show vlan brief
-```
-
-Expected VLAN placement:
-
-| Device |	Required VLANs |
-|---|---|
-| D-SW-1 | 10, 20, 30, 40 |
-| D-SW-2 |	10, 20, 30, 40 |
-| A-SW-1 |	10 |
-| A-SW-2 |	20 |
-| A-SW-3 |	30 |
-| A-SW-4 |	40 |
-
-Expected result:
-
-- The VLANs appear as active.
-- Each user-facing interface belongs to its assigned VLAN.
-
-## 3. Trunk Verification
-
-### Access-to-Distribution Trunks
-
-Run on each Access switch:
-
-```cisco
-show interfaces trunk
-```
-
-Expected result:
-
-- Both uplinks operate as 802.1Q trunks.
-- Each trunk carries the VLAN assigned to that Access switch.
-- One uplink may be forwarding while the other is blocked by Rapid-PVST.
-  
-| Access Switch |	Allowed VLAN |
-|---|---|
-| A-SW-1 |	VLAN 10 |
-| A-SW-2 |	VLAN 20 |
-| A-SW-3 |	VLAN 30 |
-| A-SW-4 |	VLAN 40 |
- 
-### Distribution-to-Distribution Trunk
-
-Run on both Distribution switches:
-
-```cisco
-show interfaces trunk
-```
-
-Expected result:
-
-- `GigabitEthernet0/3` operates as an 802.1Q trunk.
-- VLANs 10, 20, 30, and 40 are allowed and active on the trunk.
-- The Layer 2 trunk is separate from the routed OSPF link on `GigabitEthernet0/2`.
-
-Additional command:
-
-```cisco
-show interfaces switchport
-```
-
-This command confirms the administrative and operational switchport modes.
-
-## 4. Spanning Tree Verification
-
-Run on the Distribution and Access switches:
-
-```cisco
-show spanning-tree root
-```
-
-Expected root placement:
-
-| VLAN |	Root Bridge |
-|---|---|
-| VLAN 10 |	`D-SW-1` |
-| VLAN 20 |	`D-SW-2` |
-| VLAN 30 |	`D-SW-1` |
-| VLAN 40 |	`D-SW-2` |
-
-Run on each Access switch:
-
-```cisco
-show spanning-tree vlan 10
-show spanning-tree vlan 20
-show spanning-tree vlan 30
-show spanning-tree vlan 40
-```
-
-Use only the command corresponding to the VLAN assigned to that switch.
-
-Expected result:
-
-- One uplink is in the `Forwarding` state.
-- The redundant uplink may be in the `Alternate/Blocking` state.
-- No Layer 2 loop is present.
-- The user-facing port operates as a PortFast edge port.
-
-## 5. Layer 3 Transit Verification
-
-Run on all Core and Distribution switches:
-
-```cisco
-show ip interface brief
-show interfaces description
-```
-
-Expected routed connections:
-
-| Local Device |	Remote Device |	Local Address |
-|---|---|---|
-| C-SW-1 |	D-SW-1 |	10.0.0.1/30 |
-| C-SW-1 |	D-SW-2 |	10.0.0.5/30 |
-| C-SW-2 |	D-SW-1 |	10.0.0.9/30 |
-| C-SW-2 |	D-SW-2 |	10.0.0.13/30 |
-| D-SW-1 |	D-SW-2 |	10.0.0.17/30 |
-| D-SW-2 |	D-SW-1 |	10.0.0.18/30 |
-
-Test each directly connected neighbor with `ping`.
-
-Example from C-SW-1:
-
-```cisco
-ping 10.0.0.2
-ping 10.0.0.6
-```
-
-Expected result:
+## 2. EtherChannel between the Distribution switches
 
 ```
-Success rate is 100 percent
+show etherchannel summary
 ```
 
-## 6. OSPF Neighbor Verification
+Expected: `Po1(SU)` with `Gi0/0(P)` and `Gi0/1(P)`. `S` = Layer 2, `U` = in use,
+`(P)` = bundled.
 
-Run:
+- `(I)` on a member means it is standalone — LACP is not negotiating. Confirm
+  both ends use `channel-group 1 mode active`.
+- `Po1(SD)` means the bundle is down: usually the trunk settings differ between
+  the two members.
 
-```cisco
+`Po1` must carry **no** IP address and **no** OSPF. If `show ip interface brief`
+lists an address on it, that is a deviation from the design.
+
+## 3. OSPF adjacencies
+
+```
 show ip ospf neighbor
 ```
 
-Expected neighbor relationships:
+Expected across the whole lab: **five adjacencies**, all `FULL`.
 
-| Device |	Expected OSPF Neighbors |
+| Area | Adjacency |
 |---|---|
-|C-SW-1 |	D-SW-1 and D-SW-2 |
-|C-SW-2 |	D-SW-1 and D-SW-2 |
-|D-SW-1 |	C-SW-1, C-SW-2, and D-SW-2 |
-|D-SW-2 |	C-SW-1, C-SW-2, and D-SW-1 |
+| 0 | C-SW-1 ↔ C-SW-2 |
+| 1 | C-SW-1 ↔ D-SW-1 |
+| 1 | C-SW-1 ↔ D-SW-2 |
+| 1 | C-SW-2 ↔ D-SW-1 |
+| 1 | C-SW-2 ↔ D-SW-2 |
 
-Expected result:
+So each Core sees **three** neighbours and each Distribution sees **two**.
 
-- All required adjacencies reach the FULL state.
-- Router IDs match the configured loopback addresses.
+The transit links use `ip ospf network point-to-point`, so the `State` column
+shows `FULL/  -` rather than `FULL/DR` — that is correct, not a fault.
 
-Router IDs:
+More than five means something that should be passive is not — most likely an
+SVI, or OSPF enabled on `Po1`. Fewer means a link is down or one side is missing
+its `ip ospf 1 area <n>`.
 
-| Device |	Router ID |
-|---|---|
-| C-SW-1 |	10.222.0.1 |
-| C-SW-2 |	10.222.0.2 |
-| D-SW-1 |	10.222.0.3 |
-| D-SW-2 |	10.222.0.4 |
+Confirm the Core devices are ABRs:
 
-Additional commands:
-
-```cisco
-show ip ospf interface brief
-show ip protocols
+```
+show ip ospf | include Area|border
 ```
 
-## 7. Routing Table Verification
+Expected on C-SW-1 and C-SW-2: area border router, attached to areas 0 and 1.
 
-Run:
+## 4. Routing table
 
-```cisco
-show ip route
+On C-SW-1:
+
+```
 show ip route ospf
 ```
 
-Expected result:
+Expected: the four user VLANs (`10.10.10.0/24` … `10.10.40.0/24`), the two
+transit `/30`s it does not own (`10.0.0.8/30`, `10.0.0.12/30`) and the three
+other loopbacks.
 
-- Core switches learn the user VLAN networks through OSPF.
-- Distribution switches learn remote VLAN and loopback networks.
-- Distribution switches receive a default route through OSPF.
-- Multiple equal-cost routes may appear when redundant paths are available.
+Only the **four VLANs** show two equal-cost paths — one via each Distribution
+switch, both at cost 2. Everything else has a single best path, and that is
+correct, not a fault: each Distribution loopback is one hop away over its own
+transit link (cost 2 versus 4 the long way round); each remote `/30` is reached
+through the Distribution switch that terminates it (cost 2 versus 3); and
+`10.222.0.2/32` sits in area 0, so its only intra-area path is the Core–Core
+link — OSPF never load-shares an intra-area route with an inter-area one.
 
-Verify the default route on Distribution:
+A VLAN with only one path means a Core–Distribution link is down; the lab still
+works, but it no longer demonstrates the redundancy it exists to show.
 
-```cisco
-show ip route 0.0.0.0
+## 5. HSRP
+
+On D-SW-1 and D-SW-2:
+
 ```
-
-Expected result:
-
-- An OSPF external default route points toward the Core layer.
-
-Verify loopback reachability:
-
-```cisco
-ping 10.222.0.1
-ping 10.222.0.2
-ping 10.222.0.3
-ping 10.222.0.4
-```
-
-## 8. HSRP Verification
-
-HSRP is implemented only on the Core interfaces facing the simulated Internet segment.
-
-Run on both Core switches:
-
-```cisco
 show standby brief
 ```
 
-Expected result:
+Expected — the active router alternates by VLAN, and each VIP is `.1`:
 
-| Device |	State |	Physical IP |	Virtual IP |
+| Group | VIP | Active | Standby |
 |---|---|---|---|
-| C-SW-1 |	Active |	192.168.116.102 |	192.168.116.101 |
-| C-SW-2 |	Standby |	192.168.116.103 |	192.168.116.101 |
+| 10 | `10.10.10.1` | D-SW-1 | D-SW-2 |
+| 20 | `10.10.20.1` | D-SW-2 | D-SW-1 |
+| 30 | `10.10.30.1` | D-SW-1 | D-SW-2 |
+| 40 | `10.10.40.1` | D-SW-2 | D-SW-1 |
 
-C-SW-1 should become Active because it has the higher HSRP priority.
+Both switches showing `Active` for the same group means they cannot hear each
+other — check `Po1` and that both trunks allow the VLAN.
 
-Detailed verification:
+## 6. End-to-end connectivity
 
-```cisco
-show standby
+From PC-1 (for another host, substitute its own gateway and a host in a
+different VLAN):
+
 ```
-
-Confirm:
-
-- HSRP version 2 is active.
-- Group 116 uses virtual IP `192.168.116.101`.
-- C-SW-1 has priority 110.
-- C-SW-2 has priority 100.
-- Preemption is enabled.
-
-## 9. Inter-VLAN Connectivity
-
-Example end-device addressing:
-
-| Device |	Address |	Gateway |
-|---|---|
-| PC-1 |	10.10.10.100/24 |	10.10.10.1 |
-| PC-2 |	10.10.20.100/24 |	10.10.20.1 |
-| PC-3 |	10.10.30.100/24 |	10.10.30.1 |
-| PC-4 |	10.10.40.100/24 |	10.10.40.1 |
-
-Test each local gateway first.
-
-From PC-1:
-
-```cisco
+show ip
 ping 10.10.10.1
-```
-
-Then test communication between VLANs:
-
-```cisco
+ping 10.10.10.101
 ping 10.10.20.100
-ping 10.10.30.100
-ping 10.10.40.100
+ping 203.0.113.1
+ping 203.0.113.2
 ```
 
-Expected result:
+Expected: the host has its planned address and gateway; the gateway replies;
+its neighbour in the same VLAN replies (the access switch works); a host in
+another VLAN replies (inter-VLAN routing works); and **both** ISP loopbacks reply
+(the campus can reach the Internet through either upstream).
 
-- The local default gateway responds.
-- Hosts in different VLANs communicate successfully.
-- Traffic is routed at the Distribution layer. Under normal conditions, traffic between VLANs hosted on different Distribution switches uses the direct Layer 3 interconnection. OSPF can provide an alternate path through the Core layer if that link fails.
+Ping both `203.0.113.1` and `203.0.113.2`, not just one. The two Core devices
+load-share the default route, so a single destination only exercises one of the
+two upstreams and can pass while the other path is broken.
 
-## 10. Simulated Internet Connectivity
+The first packet of a run often times out while ARP resolves. Two replies out of
+three is a pass; zero is a failure.
 
-Before testing connectivity, confirm that the simulated Internet node has the following return route:
+Measured on the finished lab, three pings per destination from every host:
+gateway, same-VLAN neighbour, a host in another VLAN and `203.0.113.1` — 8 hosts
+× 4 destinations = 32 checks, no failures. `203.0.113.2` was then confirmed from
+PC-1 separately, and again from PC-1 during the upstream failure test below.
 
-```text
-Destination: 10.0.0.0/8
-Next hop: 192.168.116.101
+`trace 203.0.113.1` from PC-1 should show the HSRP active switch for VLAN 10,
+then a Core, then an ISP.
+
+## 7. Failure tests — the point of the lab
+
+Run these with a continuous ping going from PC-1. Restore each one before moving
+to the next, and do **not** save while an interface is shut.
+
+### The HSRP active router fails
+
+```
+D-SW-1(config)# interface Vlan10
+D-SW-1(config-if)# shutdown
 ```
 
-This route allows return traffic to reach the internal lab networks through the active HSRP Core switch.
+Expected: `show standby brief` on D-SW-2 flips VLAN 10 to `Active`, and traffic
+from PC-1 keeps flowing. Measured: no packet loss at all. Undo the shutdown and,
+because preemption is configured, D-SW-1 reclaims the active role.
 
-From each Core switch:
+### A Core–Distribution link fails
 
-```cisco
-ping 192.168.116.2
 ```
-Expected result:
-
-- Both Core switches can reach the simulated Internet node.
-
-From the Distribution switches:
-
-```cisco
-ping 192.168.116.2
+D-SW-1(config)# interface GigabitEthernet0/2
+D-SW-1(config-if)# shutdown
 ```
 
-From each end device:
+Expected: D-SW-1 drops from two OSPF neighbours to one, reconverges over `Gi0/3`
+toward C-SW-2, and traffic keeps flowing. Measured: no loss during the failure,
+occasionally one packet on the way back as OSPF reconverges.
 
-```cisco
-ping 192.168.116.2
+### An EtherChannel member fails
+
+```
+D-SW-1(config)# interface GigabitEthernet0/0
+D-SW-1(config-if)# shutdown
 ```
 
-Expected result:
+Expected: `show etherchannel summary` shows `Po1(SU)` still up, with `Gi0/0(D)`
+and `Gi0/1(P)`. HSRP does not flap and traffic keeps flowing.
 
-- Internal traffic follows the OSPF default route toward the Core layer.
-- The simulated Internet node is reachable from all internal VLANs.
+### An upstream ISP fails
 
-## 11. Routed-Link Failover Test
-
-Generate continuous traffic between an internal host and a remote destination.
-
-Example:
-
-```cisco
-ping 192.168.116.2
+```
+ISP-1(config)# interface GigabitEthernet0/0
+ISP-1(config-if)# shutdown
 ```
 
-Disable one Core-to-Distribution link.
+Expected: within about 15 seconds `show track 1` reads `Down` on both C-SW-1 and
+ISP-1; C-SW-1 withdraws its default route and stops advertising it into OSPF, so
+the campus leaves through C-SW-2. **Both** `203.0.113.1` and `203.0.113.2` stay
+reachable — `.2` directly through ISP-2, and `.1` through ISP-2 and the peering
+link, with ISP-1 answering over its floating return route. Measured: no loss to
+either destination.
 
-Example:
-
-```cisco
-interface GigabitEthernet0/1
- shutdown
-```
-
-Verify:
-
-```cisco
-show ip ospf neighbor
-show ip route
-traceroute 192.168.116.2
-```
-
-Expected result:
-
-- The OSPF adjacency on the disabled link goes down.
-- OSPF recalculates the route.
-- Traffic uses an alternate Core-to-Distribution path.
-- Connectivity resumes after convergence.
-
-Restore the interface:
-
-```cisco
-interface GigabitEthernet0/1
- no shutdown
-```
-
-## 12. Access Uplink Failover Test
-
-Generate continuous traffic from an Access-layer host.
-
-Identify the current forwarding uplink:
-
-```cisco
-show spanning-tree vlan <VLAN_ID>
-```
-
-Expected forwarding uplinks under normal conditions:
-
-| Access Switch | VLAN | Expected Forwarding Uplink | Root Bridge |
-|---|---:|---|---|
-| `A-SW-1` | 10 | `GigabitEthernet0/0` | `D-SW-1` |
-| `A-SW-2` | 20 | `GigabitEthernet0/1` | `D-SW-2` |
-| `A-SW-3` | 30 | `GigabitEthernet0/0` | `D-SW-1` |
-| `A-SW-4` | 40 | `GigabitEthernet0/1` | `D-SW-2` |
-
-Disable the interface currently operating as the forwarding uplink:
-
-```cisco
-interface <FORWARDING_UPLINK>
- shutdown
-```
-
-Verify:
-
-```cisco
-show spanning-tree vlan <VLAN_ID>
-show interfaces trunk
-```
-
-Expected result:
-
-- The alternate uplink transitions to the Forwarding state.
-- Host connectivity resumes through the remaining Distribution uplink.
-- No switching loop occurs.
-
-Restore the interface:
-
-```cisco
-interface <FORWARDING_UPLINK>
- no shutdown
-```
-
-## 13. HSRP Failover Test
-
-While continuously pinging the HSRP virtual IP or another reachable address, disable the Internet-facing interface on C-SW-1:
-
-```cisco
-interface GigabitEthernet0/0
- shutdown
-```
-
-Run on C-SW-2:
-
-```cisco
-show standby brief
-```
-
-Expected result:
-
-- C-SW-2 transitions from Standby to Active.
-- C-SW-2 assumes virtual IP 192.168.116.101.
-- The interruption is limited to the HSRP convergence period.
-
-Restore C-SW-1:
-
-```cisco
-interface GigabitEthernet0/0
- no shutdown
-```
-
-Because preemption is enabled and C-SW-1 has a higher priority, it should regain the Active role.
-
-## 14. Useful Troubleshooting Commands
-
-```cisco
-show running-config
-show ip interface brief
-show interfaces description
-show interfaces trunk
-show interfaces switchport
-show vlan brief
-show spanning-tree root
-show spanning-tree blockedports
-show ip ospf neighbor
-show ip ospf interface brief
-show ip protocols
-show ip route
-show ip route ospf
-show standby brief
-show standby
-show cdp neighbors
-show cdp neighbors detail
-ping
-traceroute
-```
-
-## Final Verification Result
-
-The verification process confirms:
-
-- Correct VLAN segmentation
-- Redundant Access uplinks
-- Rapid-PVST operation
-- Operational Layer 3 transit links
-- Full OSPF adjacencies
-- Dynamic route propagation
-- Inter-VLAN communication
-- Default-route distribution
-- HSRP operation on the Internet-facing segment
-- Alternate path availability after a link failure
-
-The HSRP placement is intentionally limited to the simulated Internet-facing segment and is not presented as the default gateway mechanism for the internal user VLANs.
+This is the test that justifies the peering link and the IP SLA probes. Before
+they existed it failed in two different ways: traffic to the "wrong" ISP died
+there, and once an upstream went down the Core kept advertising a default route
+into a black hole, because an EVE-NG bridge never signals link-down to the far
+end.

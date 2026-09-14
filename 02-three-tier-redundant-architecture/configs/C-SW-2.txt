@@ -1,55 +1,55 @@
 !
-! C-SW-2 - Sanitized Device Configuration
+! C-SW-2 - sanitized device configuration
+! Lab 02 - three-tier architecture with L3 redundancy
 !
 hostname C-SW-2
 !
-no ip domain-lookup
-ip routing
+no ip domain lookup
+!
+track 1 ip sla 1 reachability
 !
 interface Loopback0
- description OSPF_ROUTER_ID
  ip address 10.222.0.2 255.255.255.255
+ ip ospf 1 area 0
 !
 interface GigabitEthernet0/0
- description INTERNET_FACING_SEGMENT
- no switchport
- ip address 192.168.116.103 255.255.255.0
- standby version 2
- standby 116 ip 192.168.116.101
- standby 116 priority 100
- standby 116 preempt
- no shutdown
+ description To ISP-2
+ ip address 198.51.100.1 255.255.255.252
 !
 interface GigabitEthernet0/1
- description L3_LINK_TO_D-SW-1
- no switchport
- ip address 10.0.0.9 255.255.255.252
- ip ospf 1 area 0
- no shutdown
+ description To D-SW-2 Gi0/2
+ ip address 10.0.0.13 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 1
 !
 interface GigabitEthernet0/2
- description L3_LINK_TO_D-SW-2
- no switchport
- ip address 10.0.0.13 255.255.255.252
+ description To D-SW-1 Gi0/3
+ ip address 10.0.0.9 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 1
+!
+interface GigabitEthernet0/3
+ description To C-SW-1 core link
+ ip address 10.0.0.22 255.255.255.252
+ ip ospf network point-to-point
  ip ospf 1 area 0
- no shutdown
 !
 router ospf 1
  router-id 10.222.0.2
- passive-interface default
- no passive-interface GigabitEthernet0/1
- no passive-interface GigabitEthernet0/2
- network 10.222.0.2 0.0.0.0 area 0
+ passive-interface Loopback0
  default-information originate
 !
-ip route 0.0.0.0 0.0.0.0 192.168.116.2
+ip route 0.0.0.0 0.0.0.0 198.51.100.2 track 1
 !
-line console 0
- logging synchronous
+ip sla 1
+ icmp-echo 198.51.100.2 source-interface GigabitEthernet0/0
+ frequency 5
+ip sla schedule 1 life forever start-time now
+!
+line con 0
  exec-timeout 0 0
-!
+ logging synchronous
 line vty 0 4
- login local
- transport input ssh
+ login
 !
 end

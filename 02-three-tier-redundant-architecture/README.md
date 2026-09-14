@@ -1,223 +1,115 @@
-# Three-Tier Redundant Architecture Lab
+# Three-Tier Architecture with Layer 3 Redundancy
 
-## Objective
+A campus network built the way a real one is: three hierarchical layers, routed
+links between Core and Distribution, first-hop redundancy for the users, and two
+independent Internet upstreams. Nothing in it depends on a single device.
 
-This lab documents a three-tier enterprise network built in EVE-NG using Core, Distribution, and Access layers.
-
-The design focuses on:
-
-- Layer 3 redundancy
-- Redundant uplinks
-- VLAN segmentation
-- HSRP redundancy on the simulated Internet-facing segment
-- OSPF dynamic routing
-- High availability
-- Network troubleshooting and verification
+- **Platform:** EVE-NG Community
+- **Images:** `vios-adventerprisek9` (routers), `viosl2-adventerprisek9` (switches), VPCS (hosts)
+- **Size:** 18 nodes, 26 links, 4 user VLANs
 
 ## Topology
 
-![Topology Diagram](topology.png)
-
-## Network Design
-
-### Core Layer
-
-The Core layer contains two Layer 3 switches:
-
-- `C-SW-1`
-- `C-SW-2`
-
-Each Core switch connects to both Distribution switches through routed Layer 3 links.
-
-The Core switches connect to the simulated Internet-facing segment and use HSRP to provide a redundant next-hop address for return traffic from the simulated Internet node.
-
-### Distribution Layer
-
-The Distribution layer contains:
-
-- `D-SW-1`
-- `D-SW-2`
-
-Each Distribution switch connects to both Core switches.
-
-The Distribution switches are connected through two separate links:
-
-- A routed Layer 3 link used by OSPF as an additional routing path.
-- An 802.1Q trunk carrying VLANs 10, 20, 30, and 40.
-
-The Layer 2 trunk allows an Access switch to reach the Distribution switch hosting its VLAN gateway when traffic enters through the alternate uplink.
-
-The Distribution switches provide the default gateways for the user VLANs.
-
-### Access Layer
-
-The Access layer contains four switches:
-
-- `A-SW-1`
-- `A-SW-2`
-- `A-SW-3`
-- `A-SW-4`
-
-Each Access switch is connected to both Distribution switches for redundant Layer 2 connectivity.
-
-Each Access switch serves one user VLAN.
-
-## Device Roles and Loopback Addresses
-
-| Device | Layer | Loopback 0 | Role |
-|---|---|---|---|
-| `C-SW-1` | Core | `10.222.0.1/32` | Primary Core switch |
-| `C-SW-2` | Core | `10.222.0.2/32` | Secondary Core switch |
-| `D-SW-1` | Distribution | `10.222.0.3/32` | Primary Distribution switch |
-| `D-SW-2` | Distribution | `10.222.0.4/32` | Secondary Distribution switch |
-| `A-SW-1` | Access | N/A | Access switch for VLAN 10 |
-| `A-SW-2` | Access | N/A | Access switch for VLAN 20 |
-| `A-SW-3` | Access | N/A | Access switch for VLAN 30 |
-| `A-SW-4` | Access | N/A | Access switch for VLAN 40 |
-
-## VLAN and Subnet Summary
-
-| VLAN | Subnet | Access Switch |
-|---|---|---|
-| VLAN 10 | `10.10.10.0/24` | `A-SW-1` |
-| VLAN 20 | `10.10.20.0/24` | `A-SW-2` |
-| VLAN 30 | `10.10.30.0/24` | `A-SW-3` |
-| VLAN 40 | `10.10.40.0/24` | `A-SW-4` |
-
-## Internet Edge Redundancy
-
-In this lab, HSRP is intentionally implemented on the Core switches on the segment facing the simulated Internet node.
-
-This is not the typical campus deployment in which HSRP provides the default gateway for end-user VLANs. The design was used as a lab-specific method to provide a shared and redundant Layer 3 address between the two Core switches and the simulated Internet segment.
-
-| Device | IP Address |
-|---|---|
-| `C-SW-1` | `192.168.116.102/24` |
-| `C-SW-2` | `192.168.116.103/24` |
-| HSRP Virtual IP | `192.168.116.101` |
-| Internet Gateway | `192.168.116.2` |
-
-The virtual IP `192.168.116.101` represents the redundant Core-side address on the Internet-facing segment.
-
-If the active Core switch becomes unavailable, the standby Core switch assumes ownership of the HSRP virtual IP, preserving Layer 3 availability on that segment.
-
-The HSRP placement in this lab is intentional and reflects the requirements and limitations of the simulated topology.
-
-## Routing Design
-
-The network uses routed Layer 3 links between the Core and Distribution switches.
-
-OSPF is used to advertise:
-
-- Core loopback interfaces
-- Distribution loopback interfaces
-- Layer 3 transit networks
-- User VLAN networks
-- The default route toward the Internet edge
-
-The routed design reduces Layer 2 failure domains and provides multiple paths between the Core and Distribution layers.
-
-## HSRP Implementation
-
-HSRP is implemented exclusively on the Core switches on the segment facing the simulated Internet node.
-
-The virtual IP `192.168.116.101` provides a shared and redundant Core-side address. The simulated Internet node can use this virtual address as the next hop for routes returning toward the internal network.
-
-HSRP is not used as the default gateway mechanism for the internal user VLANs. The VLAN gateway responsibilities are distributed between the two Distribution switches:
-
-- `D-SW-1` provides the gateways for VLANs 10 and 30.
-- `D-SW-2` provides the gateways for VLANs 20 and 40.
-
-This placement was selected intentionally for the simulated topology and differs from the typical campus design where HSRP is commonly deployed on user VLAN interfaces.
-
-## Redundancy Design
-
-The lab includes:
-
-- Two Core switches
-- Two Distribution switches
-- Four Access switches
-- Full-mesh Layer 3 connectivity between Core and Distribution
-- A routed Layer 3 link between the Distribution switches
-- A separate 802.1Q trunk between the Distribution switches
-- Dual uplinks from each Access switch
-- HSRP next-hop redundancy on the simulated Internet-facing segment
-- OSPF dynamic routing
-
-The design provides alternate paths after routed-link or Access-uplink failures. HSRP also preserves the shared Core-side address if one Core switch becomes unavailable. Internal VLAN gateway redundancy is outside the scope of this implementation.
-
-## Technologies Practiced
-
-- Three-tier enterprise network architecture
-- Cisco Layer 3 switching
-- Routed switch ports
-- VLAN segmentation
-- 802.1Q trunking
-- HSRP
-- OSPF
-- Loopback interfaces
-- Redundant uplinks
-- Default route propagation
-- Network troubleshooting
-- Cisco IOS verification commands
-
-## Lab Goals
-
-1. Build a three-tier network using Core, Distribution, and Access layers.
-2. Configure Layer 3 routed links between Core and Distribution switches.
-3. Establish OSPF neighbor relationships.
-4. Advertise loopbacks, transit networks, and VLAN networks through OSPF.
-5. Configure redundant uplinks between the Access and Distribution layers.
-6. Configure HSRP toward the simulated Internet edge.
-7. Verify inter-VLAN connectivity.
-8. Verify end-to-end network connectivity.
-9. Test routed-link, Access-uplink, and Core-side HSRP failover.
-
-## IP Addressing Plan
-
-The complete IP addressing and interface plan is documented here:
-
-[View IP Addressing Plan](addressing-plan.md)
-
-## Configuration Files
-
-Sanitized device configurations are stored in the `configs` folder:
-
-- [C-SW-1 Configuration](configs/C-SW-1.txt)
-- [C-SW-2 Configuration](configs/C-SW-2.txt)
-- [D-SW-1 Configuration](configs/D-SW-1.txt)
-- [D-SW-2 Configuration](configs/D-SW-2.txt)
-- [A-SW-1 Configuration](configs/A-SW-1.txt)
-- [A-SW-2 Configuration](configs/A-SW-2.txt)
-- [A-SW-3 Configuration](configs/A-SW-3.txt)
-- [A-SW-4 Configuration](configs/A-SW-4.txt)
-
-## Verification
-
-Verification commands and testing methodology are documented in:
-
-[View Verification Documentation](verification.md)
-
-Verification areas include:
-
-- VLAN verification
-- Trunk verification
-- Routed-interface verification
-- OSPF neighbor verification
-- Routing-table verification
-- HSRP verification
-- Inter-VLAN connectivity
-- End-to-end connectivity
-- Redundancy and failover testing
-
-## Security and Privacy
-
-Passwords, hashes, serial numbers, and sensitive values are removed or changed before publishing.
-
-All addressing and network scenarios are used for lab and documentation purposes.
-
-## Final Result
-
-The lab demonstrates a three-tier enterprise architecture using Layer 3 routing, VLAN segmentation, OSPF, Rapid-PVST, redundant uplinks, and HSRP on the simulated Internet-facing segment.
-
-The design provides dynamic route recovery, Access-uplink redundancy, and a redundant next-hop address for return traffic through the Core layer. Internal VLAN gateway redundancy is outside the scope of this implementation.
+![Topology](topology.png)
+
+## Layers
+
+**Core — `C-SW-1`, `C-SW-2`.** Two IOSv routers. Each one faces its own ISP and
+carries a routed `/30` down to *both* Distribution switches, plus a Core–Core
+link (`10.0.0.20/30`) so the two halves stay connected even if a Distribution
+path is lost.
+
+**Distribution — `D-SW-1`, `D-SW-2`.** Two IOSvL2 switches. Northbound they are
+routed (`no switchport` on `Gi0/2` and `Gi0/3`) and speak OSPF. Southbound they
+are Layer 2 trunks toward the access switches. Between themselves they run a
+pure Layer 2 EtherChannel (`Po1`, LACP over `Gi0/0` + `Gi0/1`) — no IP, no OSPF
+adjacency. They own the user gateways via HSRP.
+
+**Access — `A-SW-1` … `A-SW-4`.** One VLAN each, two hosts each, and dual uplinks
+to both Distribution switches.
+
+## Design decisions worth knowing
+
+**OSPF 1 is multi-area, with the Core switches acting as ABRs.** `area 0` covers
+the Core–Core link (`10.0.0.20/30`) and the Core loopbacks; `area 1` covers the
+four Core–Distribution transits, the Distribution loopbacks and the four user
+VLANs. Interfaces are placed with `ip ospf 1 area <n>` rather than `network`
+statements, and the transit links run `ip ospf network point-to-point` to skip
+DR/BDR election.
+
+**Exactly five adjacencies form** — one in area 0 (C-SW-1 ↔ C-SW-2) and four in
+area 1 (each Core to each Distribution). The Distribution loopbacks and the four
+SVIs are `passive-interface`, so they are advertised into area 1 without
+creating neighbours. `show ip ospf neighbor` returning any other count means the
+design drifted.
+
+**The ISP links stay out of OSPF** on purpose. The Internet edge is reached by
+static and default routing, not by peering with a simulated ISP. Their absence
+from the OSPF process is intentional, not an oversight.
+
+**The two ISPs are linked to each other** (`203.0.113.4/30`) and each edge static
+route is tied to an IP SLA probe. Both details exist for the same reason: without
+them, half the Internet traffic black-holes at the wrong ISP, and a failed
+upstream is never detected. See [`addressing-plan.md`](addressing-plan.md).
+
+**The Distribution–Distribution link carries no OSPF.** It is Layer 2 only. Its
+job is to let both switches see every user VLAN, which is what makes HSRP work.
+
+**HSRP alternates its active router per VLAN** (D-SW-1 for VLANs 10 and 30,
+D-SW-2 for 20 and 40) so both switches forward traffic in normal operation
+instead of leaving one idle. **The spanning-tree root follows the same split**
+(Rapid-PVST, priority 24576 on the VLANs a switch is HSRP-active for, 28672 on
+the others), so Layer 2 forwarding and the Layer 3 gateway agree on which
+Distribution switch a VLAN's traffic goes through.
+
+**Public-facing addressing uses RFC 5737 documentation ranges**
+(`192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`). The lab can be imported
+anywhere without colliding with a real network, and no host route ever leaks
+toward something that exists.
+
+Full addressing and the interface-by-interface map: [`addressing-plan.md`](addressing-plan.md).
+Test procedure and expected output: [`verification.md`](verification.md).
+
+## Platform notes
+
+**`ISP-*` and `C-SW-*` are IOSv routers**, not Layer 3 switches. Their interfaces
+are routed already, so `no switchport` is not a valid command on them — it is
+rejected line by line and leaves the interface unconfigured. Only `D-SW-*` and
+`A-SW-*` (IOSvL2) need it.
+
+**LACP negotiated normally in this lab.** `Po1` came up as `Po1(SU)`, protocol
+`LACP`, with both members `(P)`, and `show lacp neighbor` lists the partner on
+each side. That is worth stating explicitly, because lab 01 in this same repo —
+same EVE-NG host, same IOSvL2 image — could not get LACP to negotiate over its
+links and runs its EtherChannels static. What differs between the two has not
+been tracked down yet; until it is, treat LACP over EVE-NG bridges as something
+to verify with `show lacp neighbor` rather than assume.
+
+## What is in `configs/`
+
+`configs/` holds what each device actually runs, pulled from the lab itself
+and sanitised. Every device is fully configured and the lab passes the whole
+of [`verification.md`](verification.md), including the failure tests.
+
+
+[`configs-skeleton/`](configs-skeleton/) is the other half of the story: the
+clean starting point for every device, with no protocols at all, for working
+through the lab from scratch.
+
+## Running the lab
+
+1. Build the topology in EVE-NG from the interface map in
+   [`addressing-plan.md`](addressing-plan.md): 18 nodes, 26 links. The `.unl`
+   is deliberately not published — an EVE-NG export embeds every node's
+   startup-config verbatim, and nothing goes into this repo that has not been
+   through the sanitised `configs/`.
+2. Load [`configs-skeleton/`](configs-skeleton) as the startup-configs to work
+   through the lab yourself, or [`configs/`](configs) for the finished state.
+   The VPCS files use VPCS syntax, not IOS.
+3. Confirm both node images are present under `/opt/unetlab/addons/qemu/`.
+4. Start all nodes and give the switches about two minutes to boot.
+5. Work through [`verification.md`](verification.md) in order.
+
+If a node boots with the factory hostname (`Switch>`), its startup-config was not
+applied: EVE-NG only injects it into a node that boots clean. Stop that node,
+**Wipe** it, and start it again.

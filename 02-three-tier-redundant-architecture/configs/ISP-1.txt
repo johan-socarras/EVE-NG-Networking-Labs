@@ -1,0 +1,46 @@
+!
+! ISP-1 - sanitized device configuration
+! Lab 02 - three-tier architecture with L3 redundancy
+!
+hostname ISP-1
+!
+no ip domain lookup
+!
+track 1 ip sla 1 reachability
+!
+interface Loopback0
+ description Simulated Internet
+ ip address 203.0.113.1 255.255.255.255
+!
+interface GigabitEthernet0/0
+ description To C-SW-1 Gi0/0
+ ip address 192.0.2.2 255.255.255.252
+!
+interface GigabitEthernet0/1
+ description To ISP-2 peering
+ ip address 203.0.113.5 255.255.255.252
+!
+interface GigabitEthernet0/2
+ no ip address
+ shutdown
+!
+interface GigabitEthernet0/3
+ no ip address
+ shutdown
+!
+ip route 10.0.0.0 255.0.0.0 192.0.2.1 track 1
+ip route 10.0.0.0 255.0.0.0 203.0.113.6 200
+ip route 203.0.113.2 255.255.255.255 203.0.113.6
+!
+ip sla 1
+ icmp-echo 192.0.2.1 source-interface GigabitEthernet0/0
+ frequency 5
+ip sla schedule 1 life forever start-time now
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line vty 0 4
+ login
+!
+end

@@ -1,109 +1,133 @@
 !
-! D-SW-2 - Sanitized Device Configuration
+! D-SW-2 - sanitized device configuration
+! Lab 02 - three-tier architecture with L3 redundancy
 !
 hostname D-SW-2
 !
+vtp mode transparent
+!
 no ip domain-lookup
-ip routing
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+spanning-tree vlan 10,30 priority 28672
+spanning-tree vlan 20,40 priority 24576
 !
 vlan 10
- name USERS-10
+ name VLAN10
 !
 vlan 20
- name USERS-20
+ name VLAN20
 !
 vlan 30
- name USERS-30
+ name VLAN30
 !
 vlan 40
- name USERS-40
+ name VLAN40
 !
 interface Loopback0
  description OSPF_ROUTER_ID
  ip address 10.222.0.4 255.255.255.255
+ ip ospf 1 area 1
+!
+interface Port-channel1
+ switchport trunk allowed vlan 10,20,30,40
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
 !
 interface GigabitEthernet0/0
- description L3_LINK_TO_C-SW-1
- no switchport
- ip address 10.0.0.6 255.255.255.252
- ip ospf 1 area 0
- no shutdown
+ description To D-SW-1 Po1
+ switchport trunk allowed vlan 10,20,30,40
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode active
 !
 interface GigabitEthernet0/1
- description L3_LINK_TO_C-SW-2
- no switchport
- ip address 10.0.0.14 255.255.255.252
- ip ospf 1 area 0
- no shutdown
+ description To D-SW-1 Po1
+ switchport trunk allowed vlan 10,20,30,40
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode active
 !
 interface GigabitEthernet0/2
- description L3_LINK_TO_D-SW-1
+ description To C-SW-2 Gi0/1
  no switchport
- ip address 10.0.0.18 255.255.255.252
- ip ospf 1 area 0
- no shutdown
+ ip address 10.0.0.14 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 1
 !
 interface GigabitEthernet0/3
- description L2_TRUNK_TO_D-SW-1
- switchport trunk encapsulation dot1q
- switchport mode trunk
- switchport trunk allowed vlan 10,20,30,40
- no shutdown
+ description To C-SW-1 Gi0/2
+ no switchport
+ ip address 10.0.0.6 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 1
 !
 interface GigabitEthernet1/0
- description TRUNK_TO_A-SW-1
+ description To A-SW-1 Gi0/1
+ switchport trunk allowed vlan 10
  switchport trunk encapsulation dot1q
  switchport mode trunk
- switchport trunk allowed vlan 10
- no shutdown
 !
 interface GigabitEthernet1/1
- description TRUNK_TO_A-SW-2
+ description To A-SW-2 Gi0/1
+ switchport trunk allowed vlan 20
  switchport trunk encapsulation dot1q
  switchport mode trunk
- switchport trunk allowed vlan 20
- no shutdown
 !
 interface GigabitEthernet1/2
- description TRUNK_TO_A-SW-3
+ description To A-SW-3 Gi0/1
+ switchport trunk allowed vlan 30
  switchport trunk encapsulation dot1q
  switchport mode trunk
- switchport trunk allowed vlan 30
- no shutdown
 !
 interface GigabitEthernet1/3
- description TRUNK_TO_A-SW-4
+ description To A-SW-4 Gi0/1
+ switchport trunk allowed vlan 40
  switchport trunk encapsulation dot1q
  switchport mode trunk
- switchport trunk allowed vlan 40
- no shutdown
+!
+interface Vlan10
+ ip address 10.10.10.3 255.255.255.0
+ standby version 2
+ standby 10 ip 10.10.10.1
+ standby 10 preempt
+ ip ospf 1 area 1
 !
 interface Vlan20
- description DEFAULT_GATEWAY_FOR_VLAN_20
- ip address 10.10.20.1 255.255.255.0
- no shutdown
+ ip address 10.10.20.2 255.255.255.0
+ standby version 2
+ standby 20 ip 10.10.20.1
+ standby 20 priority 110
+ standby 20 preempt
+ ip ospf 1 area 1
+!
+interface Vlan30
+ ip address 10.10.30.3 255.255.255.0
+ standby version 2
+ standby 30 ip 10.10.30.1
+ standby 30 preempt
+ ip ospf 1 area 1
 !
 interface Vlan40
- description DEFAULT_GATEWAY_FOR_VLAN_40
- ip address 10.10.40.1 255.255.255.0
- no shutdown
-!
-spanning-tree mode rapid-pvst
-spanning-tree vlan 20,40 root primary
-spanning-tree vlan 10,30 root secondary
+ ip address 10.10.40.2 255.255.255.0
+ standby version 2
+ standby 40 ip 10.10.40.1
+ standby 40 priority 110
+ standby 40 preempt
+ ip ospf 1 area 1
 !
 router ospf 1
  router-id 10.222.0.4
- passive-interface default
- no passive-interface GigabitEthernet0/0
- no passive-interface GigabitEthernet0/1
- no passive-interface GigabitEthernet0/2
- network 10.222.0.4 0.0.0.0 area 0
- network 10.10.20.0 0.0.0.255 area 0
- network 10.10.40.0 0.0.0.255 area 0
+ passive-interface Loopback0
+ passive-interface Vlan10
+ passive-interface Vlan20
+ passive-interface Vlan30
+ passive-interface Vlan40
 !
-line console 0
- logging synchronous
+line con 0
  exec-timeout 0 0
+ logging synchronous
+line vty 0 4
 !
 end
