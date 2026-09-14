@@ -1,125 +1,66 @@
-R-ISP#sh run
-Building configuration...
-
-Current configuration : 1437 bytes
 !
-! Last configuration change at 03:21:59 UTC Tue Jun 23 2026
+! R-ISP - sanitized device configuration
+! Lab 03 - ASA destination NAT and ACL
 !
-version 15.9
 service timestamps debug datetime msec
 service timestamps log datetime msec
 no service password-encryption
 !
 hostname R-ISP
 !
-boot-start-marker
-boot-end-marker
-!
-!
-!
-no aaa new-model
-!
-!
-!
-mmi polling-interval 60
-no mmi auto-configure
-no mmi pvc
-mmi snmp-timeout 180
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
+logging buffered 32768 informational
+enable secret 9 <REDACTED>
 !
 no ip domain lookup
-ip domain name lab.local
-ip cef
-no ipv6 cef
+ip domain name lab.example
 !
-multilink bundle-name authenticated
+username netadmin privilege 15 secret 9 <REDACTED>
 !
-!
-!
-!
-!
-redundancy
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
+interface Loopback0
+ description OSPF_ROUTER_ID
+ ip address 10.255.0.3 255.255.255.255
+ ip ospf 1 area 0
 !
 interface GigabitEthernet0/0
- description #to Server 4.4.4.4#
- ip address 4.4.4.1 255.255.255.248
+ description To SRV-ISP eth0
+ ip address 198.51.100.1 255.255.255.248
  ip ospf 1 area 0
- duplex auto
- speed auto
- media-type rj45
 !
 interface GigabitEthernet0/1
- description #to SW-B#
+ description To SW-B Gi0/3
  ip address 192.0.2.10 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 7 <REDACTED>
  ip ospf 1 area 0
- duplex auto
- speed auto
- media-type rj45
 !
 interface GigabitEthernet0/2
+ description UNUSED
  no ip address
  shutdown
- duplex auto
- speed auto
- media-type rj45
 !
 interface GigabitEthernet0/3
+ description UNUSED
  no ip address
  shutdown
- duplex auto
- speed auto
- media-type rj45
 !
 router ospf 1
-!
-ip forward-protocol nd
-!
+ router-id 10.255.0.3
+ area 0 authentication message-digest
+ passive-interface GigabitEthernet0/0
 !
 no ip http server
 no ip http secure-server
+ip ssh time-out 60
+ip ssh version 2
 !
-ipv6 ioam timestamp
-!
-!
-!
-control-plane
-!
-banner motd ^C
-
-****************************************
-* Authorized lab access only           *
-* EVE-NG Cisco Networking Lab          *
-****************************************^C
+banner motd ^CAuthorized lab access only - EVE-NG Cisco Networking Lab^C
 !
 line con 0
-line aux 0
+ exec-timeout 0 0
+ logging synchronous
 line vty 0 4
- login
- transport input none
-!
-no scheduler allocate
+ exec-timeout 15 0
+ login local
+ transport input ssh
 !
 end

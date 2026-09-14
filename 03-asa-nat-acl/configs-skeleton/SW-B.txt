@@ -1,0 +1,68 @@
+!
+! SW-B - startup base (lab skeleton, no protocols)
+!
+hostname SW-B
+!
+no ip domain lookup
+!
+vtp mode transparent
+!
+vlan 10
+ name Site-B_Users
+!
+interface Loopback0
+ description OSPF_ROUTER_ID
+ ip address 10.255.0.2 255.255.255.255
+!
+interface GigabitEthernet0/0
+ description To Server-A eth0
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description To Server-B eth0
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ no shutdown
+!
+interface GigabitEthernet0/2
+ description To SW-A Gi0/2
+ no switchport
+ ip address 192.0.2.6 255.255.255.252
+ no shutdown
+!
+interface GigabitEthernet0/3
+ description To R-ISP Gi0/1
+ no switchport
+ ip address 192.0.2.9 255.255.255.252
+ no shutdown
+!
+interface GigabitEthernet1/0
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/1
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/2
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/3
+ description UNUSED
+ shutdown
+!
+interface Vlan10
+ description Site-B gateway
+ ip address 10.100.100.1 255.255.255.0
+ no shutdown
+!
+line console 0
+ logging synchronous
+ exec-timeout 0 0
+!
+end

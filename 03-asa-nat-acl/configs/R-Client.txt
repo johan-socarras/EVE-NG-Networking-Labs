@@ -1,125 +1,54 @@
-R-Client#sh run
-Building configuration...
-
-Current configuration : 1416 bytes
 !
-! Last configuration change at 03:15:22 UTC Tue Jun 23 2026
+! R-Client - sanitized device configuration
+! Lab 03 - ASA destination NAT and ACL
 !
-version 15.9
 service timestamps debug datetime msec
 service timestamps log datetime msec
 no service password-encryption
 !
 hostname R-Client
 !
-boot-start-marker
-boot-end-marker
-!
-!
-!
-no aaa new-model
-!
-!
-!
-mmi polling-interval 60
-no mmi auto-configure
-no mmi pvc
-mmi snmp-timeout 180
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
+logging buffered 32768 informational
+enable secret 9 <REDACTED>
 !
 no ip domain lookup
-ip domain name lab.local
-ip cef
-no ipv6 cef
+ip domain name lab.example
 !
-multilink bundle-name authenticated
-!
-!
-!
-!
-!
-redundancy
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
-!
+username netadmin privilege 15 secret 9 <REDACTED>
 !
 interface GigabitEthernet0/0
- description #to ASAv#
+ description To ASA Gi0/0
  ip address 203.0.113.1 255.255.255.252
- ip ospf 1 area 0
- duplex auto
- speed auto
- media-type rj45
 !
 interface GigabitEthernet0/1
- no ip address
- shutdown
- duplex auto
- speed auto
- media-type rj45
+ description To PC-Ext eth0
+ ip address 203.0.113.33 255.255.255.224
 !
 interface GigabitEthernet0/2
+ description UNUSED
  no ip address
  shutdown
- duplex auto
- speed auto
- media-type rj45
 !
 interface GigabitEthernet0/3
+ description UNUSED
  no ip address
  shutdown
- duplex auto
- speed auto
- media-type rj45
-!
-router ospf 1
-!
-ip forward-protocol nd
-!
 !
 no ip http server
 no ip http secure-server
 ip route 0.0.0.0 0.0.0.0 203.0.113.2
+ip ssh time-out 60
+ip ssh source-interface GigabitEthernet0/1
+ip ssh version 2
 !
-ipv6 ioam timestamp
-!
-!
-!
-control-plane
-!
-banner motd ^C
-
-****************************************
-* Authorized lab access only           *
-* EVE-NG Cisco Networking Lab          *
-****************************************^C
+banner motd ^CAuthorized lab access only - EVE-NG Cisco Networking Lab^C
 !
 line con 0
-line aux 0
+ exec-timeout 0 0
+ logging synchronous
 line vty 0 4
- login
- transport input none
-!
-no scheduler allocate
+ exec-timeout 15 0
+ login local
+ transport input ssh
 !
 end

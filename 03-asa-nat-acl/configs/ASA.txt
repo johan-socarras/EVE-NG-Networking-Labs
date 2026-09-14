@@ -1,26 +1,28 @@
-ASAv# sh run
-: Saved
-
-:
-: Serial Number: ************
-: Hardware:   ASAv, 2048 MB RAM, CPU Pentium II 3417 MHz
-:
-ASA Version 9.9(2)
 !
-hostname ASAv
-enable password **************
+! ASA - sanitized device configuration
+! Lab 03 - ASA destination NAT and ACL
+!
+: Saved
+ASA Version 9.9(2)32
+!
+hostname ASA
+domain-name lab.example
+enable password <REDACTED>
 names
-
 !
 interface GigabitEthernet0/0
+ description To R-Client Gi0/0
  nameif outside
  security-level 0
  ip address 203.0.113.2 255.255.255.252
 !
 interface GigabitEthernet0/1
+ description To SW-A Gi0/3
  nameif inside
  security-level 100
  ip address 192.0.2.1 255.255.255.252
+ ospf message-digest-key 1 md5 <REDACTED>
+ ospf authentication message-digest
 !
 interface GigabitEthernet0/2
  shutdown
@@ -58,19 +60,26 @@ interface Management0/0
  no security-level
  no ip address
 !
-banner motd ^
 ftp mode passive
+dns server-group DefaultDNS
+ domain-name lab.example
 object network SERVER_A
  host 10.100.100.10
- description Server-A in Site-B
-object network R-CLIENT
- host 203.0.113.1
-object network OBJ_VIRTUAL_DEST
- host 8.8.8.8
-access-list OUTSIDE_INSIDE extended permit icmp any host 8.8.8.8
-access-list OUTSIDE_INSIDE extended permit tcp any host 8.8.8.8 eq ssh
-access-list OUTSIDE_INSIDE extended permit tcp any host 8.8.8.8 eq https
+ description Server-A real address - currently in Site-B
+object network CLIENT_LAN
+ subnet 203.0.113.32 255.255.255.224
+ description External client LAN behind R-Client
+object network VIP_SERVER_A
+ host 198.51.100.8
+ description Fixed virtual address published to external clients
+access-list OUTSIDE_IN extended permit icmp object CLIENT_LAN object SERVER_A echo
+access-list OUTSIDE_IN extended permit tcp object CLIENT_LAN object SERVER_A eq ssh
+access-list OUTSIDE_IN extended permit tcp object CLIENT_LAN object SERVER_A eq https
+access-list OUTSIDE_IN extended permit udp object CLIENT_LAN object SERVER_A range 33434 33463
 pager lines 23
+logging enable
+logging timestamp
+logging buffered informational
 mtu outside 1500
 mtu inside 1500
 no failover
@@ -80,13 +89,15 @@ no asdm history enable
 arp timeout 14400
 no arp permit-nonconnected
 arp rate-limit 8192
-nat (outside,inside) source dynamic R-CLIENT interface destination static OBJ_VIRTUAL_DEST
-access-group OUTSIDE_INSIDE in interface outside
+nat (outside,inside) source dynamic CLIENT_LAN interface destination static VIP_SERVER_A SERVER_A
+access-group OUTSIDE_IN in interface outside
 router ospf 1
+ router-id 10.255.0.254
  network 192.0.2.0 255.255.255.252 area 0
- network 203.0.113.0 255.255.255.252 area 0
+ area 0 authentication message-digest
  log-adj-changes
 !
+route outside 203.0.113.32 255.255.255.224 203.0.113.1 1
 timeout xlate 3:00:00
 timeout pat-xlate 0:00:30
 timeout conn 1:00:00 half-closed 0:10:00 udp 0:02:00 sctp 0:02:00 icmp 0:00:02
@@ -98,55 +109,62 @@ timeout floating-conn 0:00:00
 timeout conn-holddown 0:00:15
 timeout igp stale-route 0:01:10
 user-identity default-domain LOCAL
+aaa authentication ssh console LOCAL
 aaa authentication login-history
 no snmp-server location
 no snmp-server contact
 crypto ipsec security-association pmtu-aging infinite
-crypto ca trustpoint _SmartCallHome_ServerCA
- no validation-usage
- crl configure
 crypto ca trustpool policy
  auto-import
 telnet timeout 5
 ssh stricthostkeycheck
-ssh timeout 5
+ssh 192.0.2.0 255.255.255.252 inside
+ssh timeout 10
 ssh version 2
-ssh key-exchange group dh-group1-sha1
+ssh key-exchange group dh-group14-sha1
 console timeout 0
 console serial
 threat-detection basic-threat
 threat-detection statistics access-list
 no threat-detection statistics tcp-intercept
 dynamic-access-policy-record DfltAccessPolicy
-username ***** password ********************
+username netadmin password <REDACTED> privilege 15
 !
 class-map inspection_default
  match default-inspection-traffic
 !
-!
-policy-map type inspect dns migrated_dns_map_1
+policy-map type inspect dns preset_dns_map
  parameters
   message-length maximum client auto
   message-length maximum 512
   no tcp-inspection
 policy-map global_policy
  class inspection_default
-  inspect dns migrated_dns_map_1
+  inspect ip-options
+  inspect netbios
+  inspect rtsp
+  inspect sunrpc
+  inspect tftp
+  inspect xdmcp
+  inspect dns preset_dns_map
   inspect ftp
   inspect h323 h225
   inspect h323 ras
-  inspect ip-options
-  inspect netbios
   inspect rsh
-  inspect rtsp
-  inspect skinny
   inspect esmtp
   inspect sqlnet
-  inspect sunrpc
-  inspect tftp
   inspect sip
-  inspect xdmcp
+  inspect skinny
+  inspect icmp
+  inspect icmp error
+ class class-default
+  set connection decrement-ttl
 policy-map type inspect dns migrated_dns_map_2
+ parameters
+  message-length maximum client auto
+  message-length maximum 512
+  no tcp-inspection
+policy-map type inspect dns migrated_dns_map_1
  parameters
   message-length maximum client auto
   message-length maximum 512
@@ -154,7 +172,6 @@ policy-map type inspect dns migrated_dns_map_2
 !
 service-policy global_policy global
 prompt hostname context
-call-home reporting anonymous
 call-home
  profile CiscoTAC-1
   no active
@@ -169,5 +186,4 @@ call-home
  profile License
   destination address http https://tools.cisco.com/its/service/oddce/services/DDCEService
   destination transport-method http
-Cryptochecksum:4965cdf8886868eb11391813569092a7
 : end
