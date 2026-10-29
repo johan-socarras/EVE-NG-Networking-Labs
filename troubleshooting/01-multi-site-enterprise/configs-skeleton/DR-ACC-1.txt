@@ -1,0 +1,45 @@
+!
+! DR-ACC-1 - startup base (lab skeleton, no protocols)
+!
+hostname DR-ACC-1
+!
+no ip domain-lookup
+no ip routing
+!
+interface GigabitEthernet0/0
+ description TO_DR-DIST-A_Gi0/1_(PO1_MEMBER)
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description TO_DR-DIST-A_Gi0/2_(PO1_MEMBER)
+ no shutdown
+!
+interface GigabitEthernet0/2
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet0/3
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/0
+ description TO_PC-DR-1_eth0_(VLAN_210_USERS)
+ no shutdown
+!
+interface GigabitEthernet1/1
+ description TO_SRV-DR-1_eth0_(VLAN_220_SERVERS)
+ no shutdown
+!
+interface GigabitEthernet1/2
+ description TO_MGMT-1_eth0_(VLAN_230_MANAGEMENT)
+ no shutdown
+!
+interface GigabitEthernet1/3
+ description UNUSED
+ shutdown
+!
+line console 0
+ logging synchronous
+ exec-timeout 0 0
+!
+end

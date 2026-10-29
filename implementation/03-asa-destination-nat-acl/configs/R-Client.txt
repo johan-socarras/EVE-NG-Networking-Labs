@@ -1,0 +1,54 @@
+!
+! R-Client - sanitized device configuration
+! IMP-03 - ASA destination NAT and ACL
+!
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R-Client
+!
+logging buffered 32768 informational
+enable secret 9 <REDACTED>
+!
+no ip domain lookup
+ip domain name lab.example
+!
+username netadmin privilege 15 secret 9 <REDACTED>
+!
+interface GigabitEthernet0/0
+ description To ASA Gi0/0
+ ip address 203.0.113.1 255.255.255.252
+!
+interface GigabitEthernet0/1
+ description To PC-Ext eth0
+ ip address 203.0.113.33 255.255.255.224
+!
+interface GigabitEthernet0/2
+ description UNUSED
+ no ip address
+ shutdown
+!
+interface GigabitEthernet0/3
+ description UNUSED
+ no ip address
+ shutdown
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 203.0.113.2
+ip ssh time-out 60
+ip ssh source-interface GigabitEthernet0/1
+ip ssh version 2
+!
+banner motd ^CAuthorized lab access only - EVE-NG Cisco Networking Lab^C
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line vty 0 4
+ exec-timeout 15 0
+ login local
+ transport input ssh
+!
+end

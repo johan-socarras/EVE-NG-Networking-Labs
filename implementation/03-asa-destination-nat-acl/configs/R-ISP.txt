@@ -1,0 +1,66 @@
+!
+! R-ISP - sanitized device configuration
+! IMP-03 - ASA destination NAT and ACL
+!
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R-ISP
+!
+logging buffered 32768 informational
+enable secret 9 <REDACTED>
+!
+no ip domain lookup
+ip domain name lab.example
+!
+username netadmin privilege 15 secret 9 <REDACTED>
+!
+interface Loopback0
+ description OSPF_ROUTER_ID
+ ip address 10.255.0.3 255.255.255.255
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/0
+ description To SRV-ISP eth0
+ ip address 198.51.100.1 255.255.255.248
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/1
+ description To SW-B Gi0/3
+ ip address 192.0.2.10 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 7 <REDACTED>
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/2
+ description UNUSED
+ no ip address
+ shutdown
+!
+interface GigabitEthernet0/3
+ description UNUSED
+ no ip address
+ shutdown
+!
+router ospf 1
+ router-id 10.255.0.3
+ area 0 authentication message-digest
+ passive-interface GigabitEthernet0/0
+!
+no ip http server
+no ip http secure-server
+ip ssh time-out 60
+ip ssh version 2
+!
+banner motd ^CAuthorized lab access only - EVE-NG Cisco Networking Lab^C
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line vty 0 4
+ exec-timeout 15 0
+ login local
+ transport input ssh
+!
+end

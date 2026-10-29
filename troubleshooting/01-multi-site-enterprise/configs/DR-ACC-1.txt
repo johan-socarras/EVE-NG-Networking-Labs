@@ -1,0 +1,112 @@
+!
+! DR-ACC-1 - sanitized device configuration
+! TSH-01 - multi-site enterprise network (faulted startup-config)
+!
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname DR-ACC-1
+!
+logging buffered 32768 informational
+enable secret 9 <REDACTED>
+!
+username netadmin privilege 15 secret 9 <REDACTED>
+!
+no ip routing
+!
+no ip domain-lookup
+ip domain-name corp.local
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+!
+interface Port-channel1
+ description UPLINK_TO_DR-DIST-A
+ switchport trunk allowed vlan 210,220,230
+ switchport trunk encapsulation dot1q
+!
+interface GigabitEthernet0/0
+ description TO_DR-DIST-A_Gi0/1_(PO1_MEMBER)
+ switchport trunk allowed vlan 210,220,230
+ switchport trunk encapsulation dot1q
+ channel-group 1 mode active
+!
+interface GigabitEthernet0/1
+ description TO_DR-DIST-A_Gi0/2_(PO1_MEMBER)
+ switchport trunk allowed vlan 210,220,230
+ switchport trunk encapsulation dot1q
+ channel-group 1 mode active
+!
+interface GigabitEthernet0/2
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet0/3
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/0
+ description TO_PC-DR-1_eth0_(VLAN_210_USERS)
+ switchport access vlan 210
+ switchport mode access
+ switchport nonegotiate
+ switchport port-security
+ spanning-tree portfast edge
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/1
+ description TO_SRV-DR-1_eth0_(VLAN_220_SERVERS)
+ switchport access vlan 220
+ switchport mode access
+ switchport nonegotiate
+ switchport port-security
+ spanning-tree portfast edge
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/2
+ description TO_MGMT-1_eth0_(VLAN_230_MANAGEMENT)
+ switchport access vlan 230
+ switchport mode access
+ switchport nonegotiate
+ switchport port-security
+ spanning-tree portfast edge
+ spanning-tree bpduguard enable
+!
+interface GigabitEthernet1/3
+ description UNUSED
+ shutdown
+!
+interface Vlan230
+ description MGMT_SVI
+ ip address 10.30.30.11 255.255.255.0
+!
+ip default-gateway 10.30.30.1
+!
+no ip http server
+no ip http secure-server
+!
+ip ssh time-out 60
+ip ssh version 2
+ip ssh server algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+!
+ip access-list standard MGMT_VTY
+ permit 10.10.30.0 0.0.0.255
+ permit 10.20.30.0 0.0.0.255
+ permit 10.30.30.0 0.0.0.255
+ permit 10.222.0.0 0.0.0.255
+ deny   any log
+!
+banner motd ^CAuthorized lab access only - EVE-NG Cisco Networking Lab^C
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line vty 0 4
+ access-class MGMT_VTY in
+ exec-timeout 15 0
+ login local
+ transport input ssh
+!
+end

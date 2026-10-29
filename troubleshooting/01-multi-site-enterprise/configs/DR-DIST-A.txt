@@ -1,0 +1,124 @@
+!
+! DR-DIST-A - sanitized device configuration
+! TSH-01 - multi-site enterprise network (faulted startup-config)
+!
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname DR-DIST-A
+!
+logging buffered 32768 informational
+enable secret 9 <REDACTED>
+!
+username netadmin privilege 15 secret 9 <REDACTED>
+!
+no ip domain-lookup
+ip domain-name corp.local
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+spanning-tree vlan 210,220,230 priority 4096
+!
+interface Loopback0
+ description OSPF_ROUTER_ID
+ ip address 10.222.0.31 255.255.255.255
+!
+interface Port-channel1
+ description DOWNLINK_TO_DR-ACC-1
+ switchport trunk allowed vlan 210,220,230
+ switchport trunk encapsulation dot1q
+ switchport mode dynamic desirable
+!
+interface GigabitEthernet0/0
+ description L3_LINK_TO_R3-DR_Gi0/3
+ no switchport
+ ip address 10.0.3.2 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 <REDACTED>
+!
+interface GigabitEthernet0/1
+ description TO_DR-ACC-1_Gi0/0_(PO1_MEMBER)
+ switchport trunk allowed vlan 210,220,230
+ switchport trunk encapsulation dot1q
+ switchport mode dynamic desirable
+ channel-group 1 mode active
+!
+interface GigabitEthernet0/2
+ description TO_DR-ACC-1_Gi0/1_(PO1_MEMBER)
+ switchport trunk allowed vlan 210,220,230
+ switchport trunk encapsulation dot1q
+ switchport mode dynamic desirable
+ channel-group 1 mode active
+!
+interface GigabitEthernet0/3
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/0
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/1
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/2
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/3
+ description UNUSED
+ shutdown
+!
+interface Vlan210
+ description USERS
+ ip address 10.30.10.1 255.255.255.0
+ ip helper-address 10.222.0.3
+!
+interface Vlan220
+ description SERVERS
+ ip address 10.30.20.1 255.255.255.0
+!
+interface Vlan230
+ description MGMT
+ ip address 10.30.30.1 255.255.255.0
+!
+router ospf 1
+ router-id 10.222.0.31
+ passive-interface Vlan210
+ passive-interface Vlan220
+ passive-interface Vlan230
+ network 10.0.3.0 0.0.0.3 area 3
+ network 10.30.10.0 0.0.0.255 area 3
+ network 10.30.20.0 0.0.0.255 area 3
+ network 10.30.30.0 0.0.0.255 area 3
+ network 10.222.0.31 0.0.0.0 area 3
+!
+no ip http server
+no ip http secure-server
+!
+ip ssh time-out 60
+ip ssh version 2
+ip ssh server algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+!
+ip access-list standard MGMT_VTY
+ permit 10.10.30.0 0.0.0.255
+ permit 10.20.30.0 0.0.0.255
+ permit 10.30.30.0 0.0.0.255
+ permit 10.222.0.0 0.0.0.255
+ deny   any log
+!
+banner motd ^CAuthorized lab access only - EVE-NG Cisco Networking Lab^C
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line vty 0 4
+ access-class MGMT_VTY in
+ exec-timeout 15 0
+ login local
+ transport input ssh
+!
+end

@@ -1,0 +1,29 @@
+!
+! A-SW-2 - skeleton startup-config: addressing and interfaces only, no protocols
+!
+hostname A-SW-2
+!
+no ip domain-lookup
+!
+interface GigabitEthernet0/0
+ description TO_D-SW-1
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description TO_D-SW-2
+ no shutdown
+!
+interface GigabitEthernet0/2
+ description USER_PORT_PC-3
+ no shutdown
+!
+interface GigabitEthernet0/3
+ description USER_PORT_PC-4
+ no shutdown
+!
+
+line console 0
+ logging synchronous
+ exec-timeout 0 0
+!
+end
