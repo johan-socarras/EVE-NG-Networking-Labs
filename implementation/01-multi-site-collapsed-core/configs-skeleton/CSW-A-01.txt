@@ -1,0 +1,51 @@
+!
+! CSW-A-01 - startup base (lab skeleton, no protocols)
+!
+hostname CSW-A-01
+!
+no ip domain-lookup
+ip routing
+!
+interface Loopback0
+ description OSPF_ROUTER_ID
+ ip address 10.1.255.2 255.255.255.255
+!
+interface GigabitEthernet0/0
+ description L3_LINK_TO_RTR-A-01_Gi0/2
+ no switchport
+ ip address 10.1.0.2 255.255.255.252
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description TO_ASW-A-01_Gi0/0
+ no shutdown
+!
+interface GigabitEthernet0/2
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet0/3
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/0
+ description TO_ASW-A-01_Gi1/0
+ no shutdown
+!
+interface GigabitEthernet1/1
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/2
+ description UNUSED
+ shutdown
+!
+interface GigabitEthernet1/3
+ description UNUSED
+ shutdown
+!
+line console 0
+ logging synchronous
+ exec-timeout 0 0
+!
+end

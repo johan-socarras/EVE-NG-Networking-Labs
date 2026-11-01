@@ -1,0 +1,28 @@
+!
+! ISP-1 - skeleton startup-config: addressing and interfaces only, no protocols
+!
+hostname ISP-1
+!
+no ip domain-lookup
+!
+interface Loopback0
+ description SIMULATED_INTERNET
+ ip address 203.0.113.1 255.255.255.255
+!
+interface GigabitEthernet0/0
+ description LINK_TO_C-SW-1
+ ip address 192.0.2.2 255.255.255.252
+ no shutdown
+!
+
+interface GigabitEthernet0/1
+ description To ISP-2 peering
+ ip address 203.0.113.5 255.255.255.252
+ no shutdown
+!
+
+line console 0
+ logging synchronous
+ exec-timeout 0 0
+!
+end

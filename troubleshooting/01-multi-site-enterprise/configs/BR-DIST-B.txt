@@ -1,0 +1,180 @@
+!
+! BR-DIST-B - sanitized device configuration
+! TSH-01 - multi-site enterprise network (faulted startup-config)
+!
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname BR-DIST-B
+!
+logging buffered 32768 informational
+enable secret 9 <REDACTED>
+!
+username netadmin privilege 15 secret 9 <REDACTED>
+!
+no ip domain-lookup
+ip domain-name corp.local
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+spanning-tree vlan 110,130,999 priority 8192
+spanning-tree vlan 120 priority 4096
+!
+interface Loopback0
+ description OSPF_ROUTER_ID
+ ip address 10.222.0.22 255.255.255.255
+!
+interface Port-channel1
+ description TRUNK_TO_BR-DIST-A
+ switchport trunk allowed vlan 110,120,130,999
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+!
+interface Port-channel2
+ description DOWNLINK_TO_BR-ACC-1
+ switchport trunk allowed vlan 110,120,130
+ switchport trunk encapsulation dot1q
+ switchport mode dynamic desirable
+!
+interface Port-channel3
+ description DOWNLINK_TO_BR-ACC-2
+ switchport trunk allowed vlan 110,120,130
+ switchport trunk encapsulation dot1q
+ switchport mode dynamic desirable
+!
+interface GigabitEthernet0/0
+ description L3_LINK_TO_R2-BR_Gi0/4
+ no switchport
+ ip address 10.0.2.6 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 <REDACTED>
+!
+interface GigabitEthernet0/1
+ description TO_BR-DIST-A_Gi0/1_(PO1_MEMBER)
+ switchport trunk allowed vlan 110,120,130,999
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+ channel-group 1 mode active
+!
+interface GigabitEthernet0/2
+ description TO_BR-DIST-A_Gi0/2_(PO1_MEMBER)
+ switchport trunk allowed vlan 110,120,130,999
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+ channel-group 1 mode active
+!
+interface GigabitEthernet0/3
+ description TO_BR-ACC-1_Gi0/2_(PO2_MEMBER)
+ switchport trunk allowed vlan 110,120,130
+ switchport trunk encapsulation dot1q
+ switchport mode dynamic desirable
+ channel-group 2 mode active
+!
+interface GigabitEthernet1/0
+ description TO_BR-ACC-1_Gi0/3_(PO2_MEMBER)
+ switchport trunk allowed vlan 110,120,130
+ switchport trunk encapsulation dot1q
+ switchport mode dynamic desirable
+ channel-group 2 mode active
+!
+interface GigabitEthernet1/1
+ description TO_BR-ACC-2_Gi0/2_(PO3_MEMBER)
+ switchport trunk allowed vlan 110,120,130
+ switchport trunk encapsulation dot1q
+ switchport mode dynamic desirable
+ channel-group 3 mode active
+!
+interface GigabitEthernet1/2
+ description TO_BR-ACC-2_Gi0/3_(PO3_MEMBER)
+ switchport trunk allowed vlan 110,120,130
+ switchport trunk encapsulation dot1q
+ switchport mode dynamic desirable
+ channel-group 3 mode active
+!
+interface GigabitEthernet1/3
+ description UNUSED
+ shutdown
+!
+interface Vlan110
+ description USERS
+ ip address 10.20.10.3 255.255.255.0
+ ip helper-address 10.222.0.2
+ standby version 2
+ standby 110 ip 10.20.10.1
+ standby 110 preempt
+!
+interface Vlan120
+ description GUEST
+ ip address 10.20.20.3 255.255.255.0
+ ip access-group GUEST_IN in
+ ip helper-address 10.222.0.2
+ standby version 2
+ standby 120 ip 10.20.20.1
+ standby 120 priority 110
+ standby 120 preempt
+!
+interface Vlan130
+ description MGMT
+ ip address 10.20.30.3 255.255.255.0
+ standby version 2
+ standby 130 ip 10.20.30.1
+ standby 130 preempt
+!
+interface Vlan999
+ description OSPF_TRANSIT_TO_BR-DIST-A
+ ip address 10.0.2.10 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 <REDACTED>
+!
+router ospf 1
+ router-id 10.222.0.22
+ passive-interface Vlan110
+ passive-interface Vlan120
+ passive-interface Vlan130
+ network 10.0.2.4 0.0.0.3 area 0
+ network 10.0.2.8 0.0.0.3 area 2
+ network 10.20.10.0 0.0.0.255 area 2
+ network 10.20.20.0 0.0.0.255 area 2
+ network 10.20.30.0 0.0.0.255 area 2
+ network 10.222.0.22 0.0.0.0 area 2
+!
+no ip http server
+no ip http secure-server
+!
+ip ssh time-out 60
+ip ssh version 2
+ip ssh server algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+!
+ip access-list standard MGMT_VTY
+ permit 10.10.30.0 0.0.0.255
+ permit 10.20.30.0 0.0.0.255
+ permit 10.30.30.0 0.0.0.255
+ permit 10.222.0.0 0.0.0.255
+ deny   any log
+!
+ip access-list extended GUEST_IN
+ permit udp any eq bootpc any eq bootps
+ permit ip 10.20.20.0 0.0.0.255 10.20.20.0 0.0.0.255
+ permit udp 10.0.2.0 0.0.0.255 eq bootps 10.20.20.0 0.0.0.255 eq bootps
+ permit udp 10.20.20.0 0.0.0.255 host 10.222.0.1 eq domain
+ permit tcp 10.20.20.0 0.0.0.255 host 10.222.0.1 eq domain
+ deny   ip 10.20.20.0 0.0.0.255 10.0.0.0 0.255.255.255 log
+ permit ip 10.20.20.0 0.0.0.255 any
+!
+banner motd ^CAuthorized lab access only - EVE-NG Cisco Networking Lab^C
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line vty 0 4
+ access-class MGMT_VTY in
+ exec-timeout 15 0
+ login local
+ transport input ssh
+!
+end

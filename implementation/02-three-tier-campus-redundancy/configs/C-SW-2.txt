@@ -1,0 +1,55 @@
+!
+! C-SW-2 - sanitized device configuration
+! IMP-02 - three-tier architecture with L3 redundancy
+!
+hostname C-SW-2
+!
+no ip domain lookup
+!
+track 1 ip sla 1 reachability
+!
+interface Loopback0
+ ip address 10.222.0.2 255.255.255.255
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/0
+ description To ISP-2
+ ip address 198.51.100.1 255.255.255.252
+!
+interface GigabitEthernet0/1
+ description To D-SW-2 Gi0/2
+ ip address 10.0.0.13 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 1
+!
+interface GigabitEthernet0/2
+ description To D-SW-1 Gi0/3
+ ip address 10.0.0.9 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 1
+!
+interface GigabitEthernet0/3
+ description To C-SW-1 core link
+ ip address 10.0.0.22 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+!
+router ospf 1
+ router-id 10.222.0.2
+ passive-interface Loopback0
+ default-information originate
+!
+ip route 0.0.0.0 0.0.0.0 198.51.100.2 track 1
+!
+ip sla 1
+ icmp-echo 198.51.100.2 source-interface GigabitEthernet0/0
+ frequency 5
+ip sla schedule 1 life forever start-time now
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line vty 0 4
+ login
+!
+end

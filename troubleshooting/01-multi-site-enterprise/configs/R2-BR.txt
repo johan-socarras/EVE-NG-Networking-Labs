@@ -1,0 +1,123 @@
+!
+! R2-BR - sanitized device configuration
+! TSH-01 - multi-site enterprise network (faulted startup-config)
+!
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R2-BR
+!
+logging buffered 32768 informational
+enable secret 9 <REDACTED>
+!
+ip dhcp excluded-address 10.20.10.1 10.20.10.20
+ip dhcp excluded-address 10.20.20.1 10.20.20.20
+!
+ip dhcp pool BR-USERS
+ network 10.20.10.0 255.255.255.0
+ default-router 10.20.10.1
+ dns-server 10.222.0.2
+ domain-name corp.local
+!
+ip dhcp pool BR-GUEST
+ network 10.20.20.0 255.255.255.0
+ default-router 10.20.20.1
+ dns-server 10.222.0.1
+ domain-name corp.local
+!
+ip domain name corp.local
+ip name-server 10.222.0.1
+!
+username netadmin privilege 15 secret 9 <REDACTED>
+!
+interface Loopback0
+ description OSPF_ROUTER_ID
+ ip address 10.222.0.2 255.255.255.255
+!
+interface GigabitEthernet0/0
+ description UNUSED
+ no ip address
+ shutdown
+!
+interface GigabitEthernet0/1
+ description L3_LINK_TO_R1-HQ_Gi0/1_(WAN)
+ ip address 10.0.0.2 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 <REDACTED>
+!
+interface GigabitEthernet0/2
+ description L3_LINK_TO_R3-DR_Gi0/1_(WAN)
+ ip address 10.0.0.5 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 <REDACTED>
+!
+interface GigabitEthernet0/3
+ description L3_LINK_TO_BR-DIST-A_Gi0/0
+ ip address 10.0.2.1 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 <REDACTED>
+!
+interface GigabitEthernet0/4
+ description L3_LINK_TO_BR-DIST-B_Gi0/0
+ ip address 10.0.2.5 255.255.255.252
+ ip ospf authentication message-digest
+ ip ospf message-digest-key 1 md5 <REDACTED>
+!
+interface GigabitEthernet0/5
+ description UNUSED
+ no ip address
+ shutdown
+!
+interface GigabitEthernet0/6
+ description UNUSED
+ no ip address
+ shutdown
+!
+interface GigabitEthernet0/7
+ description UNUSED
+ no ip address
+ shutdown
+!
+router ospf 1
+ router-id 10.222.0.2
+ network 10.0.0.0 0.0.0.3 area 0
+ network 10.0.0.4 0.0.0.3 area 0
+ network 10.0.2.0 0.0.0.3 area 2
+ network 10.0.2.4 0.0.0.3 area 2
+ network 10.222.0.2 0.0.0.0 area 0
+!
+no ip http server
+no ip http secure-server
+ip ssh time-out 60
+ip ssh version 2
+!
+ip access-list standard MGMT_VTY
+ permit 10.10.30.0 0.0.0.255
+ permit 10.20.30.0 0.0.0.255
+ permit 10.30.30.0 0.0.0.255
+ permit 10.222.0.0 0.0.0.255
+ deny   any log
+!
+bann
+*Oct 26 00:11:06.603: %OSPF-4-ERRRCV: Received invalid packet: mismatched area ID from backbone area from 10.0.2.6, GigabitEthernet0/4er incoming ^C
+**************************************************************************
+* IOSv is strictly limited to use for evaluation, demonstration and IOS  *
+* education. IOSv is provided as-is and is not supported by Cisco's      *
+* Technical Advisory Center. Any use or disclosure, in whole or in part, *
+* of the IOSv Software or Documentation to any third party for any       *
+* purposes is expressly prohibited except as otherwise authorized by     *
+* Cisco in writing.                                                      *
+**************************************************************************^C
+banner motd ^CAuthorized lab access only - EVE-NG Cisco Networking Lab^C
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+line vty 0 4
+ access-class MGMT_VTY in
+ exec-timeout 15 0
+ login local
+ transport input ssh
+!
+end

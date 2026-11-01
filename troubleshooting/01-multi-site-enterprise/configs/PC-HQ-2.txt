@@ -1,0 +1,2 @@
+set pcname PC-HQ-2
+ip dhcp

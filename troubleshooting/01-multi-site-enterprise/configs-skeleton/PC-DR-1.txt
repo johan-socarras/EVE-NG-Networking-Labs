@@ -1,0 +1,2 @@
+set pcname PC-DR-1
+ip dhcp

@@ -1,0 +1,36 @@
+!
+! R-ISP - startup base (lab skeleton, no protocols)
+!
+hostname R-ISP
+!
+no ip domain lookup
+!
+interface Loopback0
+ description OSPF_ROUTER_ID
+ ip address 10.255.0.3 255.255.255.255
+!
+interface GigabitEthernet0/0
+ description To SRV-ISP eth0
+ ip address 198.51.100.1 255.255.255.248
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description To SW-B Gi0/3
+ ip address 192.0.2.10 255.255.255.252
+ no shutdown
+!
+interface GigabitEthernet0/2
+ description UNUSED
+ no ip address
+ shutdown
+!
+interface GigabitEthernet0/3
+ description UNUSED
+ no ip address
+ shutdown
+!
+line console 0
+ logging synchronous
+ exec-timeout 0 0
+!
+end

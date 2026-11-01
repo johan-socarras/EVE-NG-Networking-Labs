@@ -1,0 +1,2 @@
+set pcname GUEST-BR-1
+ip dhcp

@@ -1,0 +1,15 @@
+show ip
+
+NAME        : SRV-DC-02[1]
+IP/MASK     : 10.0.20.100/24
+GATEWAY     : 10.0.20.1
+DNS         : 
+DHCP SERVER : 10.0.0.1
+DHCP LEASE  : 24614, 28800/14400/25200
+DOMAIN NAME : lab.example
+MAC         : 00:50:79:66:68:0c
+LPORT       : 20000
+RHOST:PORT  : 127.0.0.1:30000
+MTU         : 1500
+
+SRV-DC-02>

@@ -1,0 +1,32 @@
+!
+! R-Client - startup base (lab skeleton, no protocols)
+!
+hostname R-Client
+!
+no ip domain lookup
+!
+interface GigabitEthernet0/0
+ description To ASA Gi0/0
+ ip address 203.0.113.1 255.255.255.252
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description To PC-Ext eth0
+ ip address 203.0.113.33 255.255.255.224
+ no shutdown
+!
+interface GigabitEthernet0/2
+ description UNUSED
+ no ip address
+ shutdown
+!
+interface GigabitEthernet0/3
+ description UNUSED
+ no ip address
+ shutdown
+!
+line console 0
+ logging synchronous
+ exec-timeout 0 0
+!
+end
