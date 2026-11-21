@@ -5,14 +5,17 @@ site is a self-contained routing domain; the sites are stitched together by
 summarised static routes that are withdrawn automatically when the far end stops
 answering.
 
+- **Track:** Implementation
+- **Tested on:** EVE-NG Community 6.2.0-4
+- **Images:** IOSv 15.9(3)M4 `vios-adventerprisek9` (routers), IOSvL2 15.2 `viosl2-adventerprisek9` (switches), VPCS (endpoints)
+- **Size:** 14 nodes (10 QEMU, 4 VPCS), 18 links, 7 VLANs
 - **Lab file:** not distributed — see *Running the lab*
-- **Platform:** EVE-NG Community
-- **Images:** `vios-adventerprisek9` (routers), `viosl2-adventerprisek9` (switches), VPCS (endpoints)
-- **Size:** 14 nodes, 18 links, 7 VLANs, 10 QEMU nodes
 
 ## Topology
 
 ![Topology](topology.png)
+
+<sub>Click the image to open it at full size.</sub>
 
 
 ## Layers

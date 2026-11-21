@@ -4,13 +4,17 @@ A campus network built the way a real one is: three hierarchical layers, routed
 links between Core and Distribution, first-hop redundancy for the users, and two
 independent Internet upstreams. Nothing in it depends on a single device.
 
-- **Platform:** EVE-NG Community
-- **Images:** `vios-adventerprisek9` (routers), `viosl2-adventerprisek9` (switches), VPCS (hosts)
-- **Size:** 18 nodes, 26 links, 4 user VLANs
+- **Track:** Implementation
+- **Tested on:** EVE-NG Community 6.2.0-4
+- **Images:** IOSv 15.9(3)M4 `vios-adventerprisek9` (routers), IOSvL2 15.2 `viosl2-adventerprisek9` (switches), VPCS (endpoints)
+- **Size:** 18 nodes (10 QEMU, 8 VPCS), 26 links, 4 user VLANs
+- **Lab file:** not distributed — see *Running the lab*
 
 ## Topology
 
 ![Topology](topology.png)
+
+<sub>Click the image to open it at full size.</sub>
 
 ## Layers
 

@@ -7,14 +7,17 @@ the firewall. The real server lives in Site-A (`192.168.1.10`) or in Site-B
 — the host inside the `SERVER_A` object. The client is never told, and the ACL is
 not touched.
 
+- **Track:** Implementation
+- **Tested on:** EVE-NG Community 6.2.0-4
+- **Images:** IOSv 15.9(3)M4 `vios-adventerprisek9` (routers), IOSvL2 15.2 `viosl2-adventerprisek9` (switches), ASAv 9.9(2)32 `asav-992` (firewall), VPCS (endpoints)
+- **Size:** 10 nodes (5 QEMU, 5 VPCS), 9 links, 6 GB of RAM
 - **Lab file:** not distributed — see *Running the lab*
-- **Platform:** EVE-NG Community
-- **Images:** `vios-adventerprisek9` (routers), `viosl2-adventerprisek9` (switches), `asav-992` — ASA 9.9(2)32 (firewall), VPCS (endpoints)
-- **Size:** 10 nodes, 9 links, 5 QEMU nodes, 6 GB of RAM
 
 ## Topology
 
 ![Topology](topology.png)
+
+<sub>Click the image to open it at full size.</sub>
 
 Full addressing and the interface-by-interface map:
 [`addressing-plan.md`](addressing-plan.md).

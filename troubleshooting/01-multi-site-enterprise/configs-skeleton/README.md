@@ -13,7 +13,7 @@ Two ways to use them:
   from scratch.
 - **To rebuild the troubleshooting exercise**, start here, apply the full
   configuration, then inject the faults. The configuration the devices boot with
-  for the exercise lands in `../configs/` when the lab is built.
+  for the exercise is in [`../configs/`](../configs/).
 
 Things worth knowing before you start:
 

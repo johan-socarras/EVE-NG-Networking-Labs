@@ -6,10 +6,11 @@ into the running topology, and the work is to **read an incident ticket, find th
 root causes and restore the intended operational state without redesigning
 anything**.
 
-**Difficulty:** advanced · **Environment:** EVE-NG · **Images:** Cisco IOSv,
-IOSvL2, VPCS · **Nodes:** 23 (14 qemu + 9 VPCS) · **Links:** 40
-
----
+- **Track:** Troubleshooting · advanced
+- **Tested on:** EVE-NG Community 6.2.0-4
+- **Images:** IOSv 15.9(3)M4 `vios-adventerprisek9` (routers), IOSvL2 15.2 `viosl2-adventerprisek9` (switches), VPCS (endpoints)
+- **Size:** 23 nodes (14 QEMU, 9 VPCS), 40 links
+- **Lab file:** not distributed — see *Running the lab*
 
 ## Sites
 
@@ -28,11 +29,17 @@ site where HSRP simply failed over.
 The three sites are joined by a routed WAN triangle, so every site has two
 independent paths to every other site.
 
----
-
 ## Topology
 
 ![TSH-01 topology, captured from the annotated EVE-NG canvas](topology.png)
+
+<sub>Click the image to open it at full size.</sub>
+
+The same picture, one site at a time:
+
+| Headquarters | Disaster Recovery | Branch |
+|---|---|---|
+| [![Headquarters](topology-hq.png)](topology-hq.png) | [![Disaster Recovery](topology-dr.png)](topology-dr.png) | [![Branch](topology-br.png)](topology-br.png) |
 
 Three routers in a triangle, each one the area border router of its own site, and
 `R1-HQ` as the only door to the simulated Internet. Every site keeps a second path
@@ -53,8 +60,6 @@ Colour code on the canvas: gold is a loopback, green a link subnet, red the last
 octet of an address (next to its interface), purple an EtherChannel, orange a role
 and blue a site or a VLAN.
 
----
-
 ## Device inventory
 
 | Node | Image | Interfaces | Role |
@@ -71,8 +76,6 @@ and blue a site or a VLAN.
 | DR-ACC-1 | IOSvL2 | 8 | DR access, Layer 2 only |
 | PC-HQ-1, PC-HQ-2, PC-BR-1, PC-BR-2, GUEST-BR-1, PC-DR-1 | VPCS | 1 | DHCP clients |
 | SRV-HQ-1, SRV-DR-1, MGMT-1 | VPCS | 1 | Statically addressed server and management hosts |
-
----
 
 ## VLANs
 
@@ -111,8 +114,6 @@ access port assigned to it.
 
 Full addressing, including loopbacks, transit links, DHCP pools and exclusions:
 [`addressing-plan.md`](addressing-plan.md).
-
----
 
 ## Technologies, as implemented
 
@@ -171,8 +172,6 @@ and "restored" means back to this.
 | MGMT | device management (SSH) | permitted |
 | USERS, GUEST | device management (SSH) | denied |
 
----
-
 ## How the exercise works
 
 You are not told which protocol is broken, which device is broken, how many
@@ -206,15 +205,13 @@ scope, then work up — physical and Layer 2, VLANs and trunks, spanning tree an
 EtherChannel, HSRP, routing, ACLs, DHCP and DNS, NAT — and only then declare a
 root cause.
 
----
-
 ## Contents
 
 | Path | What it is |
 |---|---|
 | [`addressing-plan.md`](addressing-plan.md) | Every address, subnet, pool and virtual IP in the lab |
 | [`verification.md`](verification.md) | The acceptance checks, with the exact commands and the value each one must return |
-| [`topology.png`](topology.png) | The annotated EVE-NG canvas: every address, bundle, VLAN and role |
+| [`topology.png`](topology.png) | The annotated EVE-NG canvas: every address, bundle, VLAN and role; `topology-hq.png`, `topology-dr.png` and `topology-br.png` are crops of it, one per site |
 | [`configs-skeleton/`](configs-skeleton/) | The base build: hostnames, interfaces, routed links and loopbacks, no protocols |
 | [`configs/`](configs/) | The configuration the devices boot with for the exercise, faults included, sanitised |
 
@@ -223,9 +220,7 @@ in this repository. Publishing them next to the faulted configurations would
 turn the exercise into a diff. They live outside the repo and are opened after
 the incident is closed.
 
----
-
-## Running it
+## Running the lab
 
 1. **Build the topology in EVE-NG** from [`topology.png`](topology.png): 23 nodes,
    40 links. The wiring is also written in the interface descriptions of
@@ -267,19 +262,15 @@ the incident is closed.
    bottom. A single successful ping is not the finish line: the whole network has
    to be back in its intended state, including the redundancy you did not break.
 
----
-
 ## Status
 
 Built and verified on EVE-NG 6.2.0-4 (IOSv 15.9(3)M4, IOSvL2 15.2). The healthy
 network passes every check in [`verification.md`](verification.md), whose
-expected values now sit next to the ones measured, and the failure tests in
+expected values sit next to the ones measured, and the failure tests in
 section 9 were run and restored one by one. [`configs/`](configs/) holds the
 startup-configs the devices boot with for the incident.
 
 The restored baseline and the solution are not published, on purpose.
-
----
 
 ## Disclaimer
 

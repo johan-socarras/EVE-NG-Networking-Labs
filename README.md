@@ -1,8 +1,30 @@
-# EVE-NG Networking Labs
+<h1 align="center">EVE-NG Networking Labs</h1>
 
-This repository contains hands-on networking labs built and documented in EVE-NG, focused on Cisco routing, switching, firewalling, redundancy, network security, and troubleshooting.
+<p align="center">
+  Cisco networks I build, break and document in EVE-NG.<br>
+  Each lab ships its topology, addressing plan, sanitised configurations and an acceptance test.
+</p>
 
-The purpose of this repository is to demonstrate practical networking skills through topology diagrams, configuration files, verification commands, test results, and troubleshooting documentation.
+<p align="center">
+  <a href="https://github.com/johan-socarras/EVE-NG-Networking-Labs/actions/workflows/checks.yml"><img alt="Checks" src="https://github.com/johan-socarras/EVE-NG-Networking-Labs/actions/workflows/checks.yml/badge.svg"></a>
+  <a href="#lab-index"><img alt="4 labs" src="https://img.shields.io/badge/labs-4-2bb3ff"></a>
+  <img alt="EVE-NG Community" src="https://img.shields.io/badge/EVE--NG-Community-5b6b7f">
+  <img alt="IOSv, IOSvL2 and ASAv" src="https://img.shields.io/badge/images-IOSv%20%C2%B7%20IOSvL2%20%C2%B7%20ASAv-1ba0d7">
+  <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
+</p>
+
+<p align="center">
+  <img alt="The four labs: IMP-01, IMP-02 and IMP-03 to build, TSH-01 to troubleshoot, each with a crop of its topology" src="assets/labs-overview.png">
+</p>
+
+## Lab index
+
+| ID | Lab | Focus | Nodes | Status |
+|---|---|---|---:|---|
+| [IMP-01](implementation/01-multi-site-collapsed-core/README.md) | Multi-Site Collapsed-Core Enterprise Network | Summarised static WAN with IP SLA, OSPF per site, Layer 2 security | 14 | Complete |
+| [IMP-02](implementation/02-three-tier-campus-redundancy/README.md) | Three-Tier Campus with Layer 3 Redundancy | Multi-area OSPF, HSRP, dual ISP edge | 18 | Complete |
+| [IMP-03](implementation/03-asa-destination-nat-acl/README.md) | ASA Destination NAT and ACL | Twice NAT, ACLs on the real address, `packet-tracer` | 10 | Complete |
+| [TSH-01](troubleshooting/01-multi-site-enterprise/README.md) | Multi-Site Enterprise Network | Multiple faults across Layer 2, Layer 3, services, security and NAT | 23 | Complete |
 
 ## Tracks
 
@@ -15,18 +37,20 @@ actually is.
 |---|---|---|---|
 | **Implementation** | `IMP` | A blank topology, a design and skeleton configurations | A working network that passes its verification, failure tests included |
 | **Troubleshooting** | `TSH` | A configured network with injected faults, and an incident ticket | The root causes, and the network restored to its intended state without redesigning it |
-| **Discovery** | `DSC` | A running network with no documentation | An as-built: topology, addressing plan, protocol map and a findings report |
+| **Discovery** | `DSC` | A running network with no documentation | An as-built: topology, addressing plan, protocol map and a findings report. *No labs published yet* |
 
 Labs are numbered in reading order within their track.
 
-## Lab index
+## Requirements
 
-| ID | Lab | Focus | Nodes | Status |
-|---|---|---|---:|---|
-| [IMP-01](implementation/01-multi-site-collapsed-core/README.md) | Multi-Site Collapsed-Core Enterprise Network | Summarised static WAN with IP SLA, OSPF per site, Layer 2 security | 14 | Complete |
-| [IMP-02](implementation/02-three-tier-campus-redundancy/README.md) | Three-Tier Campus with Layer 3 Redundancy | Multi-area OSPF, HSRP, dual ISP edge | 18 | Complete |
-| [IMP-03](implementation/03-asa-destination-nat-acl/README.md) | ASA Destination NAT and ACL | Twice NAT, ACLs on the real address, `packet-tracer` | 10 | Complete |
-| [TSH-01](troubleshooting/01-multi-site-enterprise/README.md) | Multi-Site Enterprise Network | Multiple faults across Layer 2, Layer 3, services, security and NAT | 23 | Complete |
+- EVE-NG Community, with enough memory for the lab you pick: each lab states
+  its node count.
+- Your own Cisco images: IOSv, IOSvL2 and, for IMP-03, ASAv. **No vendor
+  software is included in this repository and none can be redistributed.** The
+  labs name the image each node uses so you can match it with what you are
+  licensed to run.
+- No `.unl` files are published. Every lab is rebuilt from its interface map
+  and its `configs-skeleton/`, and each README says why.
 
 ## Implementation
 
@@ -37,7 +61,7 @@ both distribution and core, and site routers meshed in a WAN triangle. Inter-sit
 routing is static, summarised per site, and tied to IP SLA probes so a failed
 link is actually withdrawn.
 
-Technologies practiced:
+Technologies practised:
 
 - VLAN segmentation and 802.1Q trunking
 - Rapid-PVST with deterministic root placement
@@ -58,7 +82,7 @@ A campus network built the way a real one is: three hierarchical layers, routed
 links between core and distribution, first-hop redundancy for the users, and two
 independent Internet upstreams. Nothing in it depends on a single device.
 
-Technologies practiced:
+Technologies practised:
 
 - Three-tier hierarchy with routed core-to-distribution links
 - Multi-area OSPF with the core as ABRs, point-to-point transits and passive user VLANs
@@ -77,7 +101,7 @@ no subnet in the lab. The server lives in one of two sites, and when it moves,
 one line changes on the firewall: the client is never told and the ACL is not
 touched.
 
-Technologies practiced:
+Technologies practised:
 
 - Twice NAT on a Cisco ASA: destination translation and source PAT in one rule
 - An interface ACL written against the real address, built from network objects
@@ -97,7 +121,7 @@ built to be broken on purpose. It arrives already configured, with faults inject
 into the running topology, and the exercise is to work from an incident ticket to
 the root causes and back to the intended state without redesigning anything.
 
-Technologies practiced:
+Technologies practised:
 
 - 802.1Q trunking, Rapid-PVST and Layer 2 EtherChannel
 - VTP and DTP, one VLAN management domain per site
@@ -116,31 +140,6 @@ results measured on the healthy network, and the faulted startup-configs.
 
 [View Lab](troubleshooting/01-multi-site-enterprise/README.md)
 
-## Discovery
-
-No labs yet. A discovery lab hands over a running network with console access
-and nothing else: no diagram, no addressing plan, no description of what it
-runs. The configurations exist only as startup-configs to load into EVE-NG, not
-as documentation. The deliverable is the documentation itself — a topology
-recovered from CDP, LLDP and the routing tables, an addressing plan, a map of
-which protocols run where, and a findings report of what is misconfigured,
-undocumented or risky.
-
-## Skills Demonstrated
-
-- Cisco IOS and ASA configuration
-- Enterprise routing and switching
-- VLANs and Layer 2 segmentation
-- Dynamic and static routing
-- First-hop redundancy
-- Route summarisation and floating static routes
-- Path liveness detection with IP SLA and object tracking
-- Layer 2 hardening: port security, DHCP snooping, DAI
-- Firewall traffic control
-- NAT and ACL implementation
-- Network troubleshooting and verification
-- Technical documentation using GitHub
-
 ## Documentation Format
 
 Every lab folder follows the same layout:
@@ -150,31 +149,15 @@ Every lab folder follows the same layout:
 | `README.md` | Scenario, topology, design decisions, platform notes and how to run the lab |
 | `addressing-plan.md` | Every address, subnet and interface, device by device |
 | `verification.md` | The acceptance test: each check with its command and the value it must return |
-| `configs/` | Sanitized configurations — the finished state for implementation labs, the faulted state for troubleshooting labs |
+| `configs/` | Sanitised configurations — the finished state for implementation labs, the faulted state for troubleshooting labs |
 | `configs-skeleton/` | The starting point: hostnames, interfaces and addressing, with no protocols |
 
 Troubleshooting labs do not publish their solution or the restored baseline:
 next to the faulted configurations, either one would turn the exercise into a
 diff.
 
-## Repository Layout
-
-```
-implementation/
-  01-multi-site-collapsed-core/
-  02-three-tier-campus-redundancy/
-  03-asa-destination-nat-acl/
-troubleshooting/
-  01-multi-site-enterprise/
-discovery/
-```
-
 ## Security and Privacy
 
 Passwords, hashes, serial numbers, public credentials, and sensitive values are removed or changed before publishing.
 
-All public IP addresses and network scenarios are used only inside isolated lab environments unless otherwise stated.
-
-## About
-
-These labs were created to strengthen practical networking skills and document hands-on experience with Cisco routing, switching, firewalling, redundancy, and troubleshooting.
+Every address is private (RFC 1918) or documentation-only (RFC 5737), and every lab runs isolated, with no bridge to a real network. The [Checks](.github/workflows/checks.yml) workflow enforces both rules on each push, along with the redaction and the absence of lab exports.

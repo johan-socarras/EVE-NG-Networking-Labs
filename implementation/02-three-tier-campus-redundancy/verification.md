@@ -60,6 +60,28 @@ Expected: `Po1(SU)` with `Gi0/0(P)` and `Gi0/1(P)`. `S` = Layer 2, `U` = in use,
 - `Po1(SD)` means the bundle is down: usually the trunk settings differ between
   the two members.
 
+Measured on the finished lab (2026-09-13), from D-SW-1; D-SW-2 shows the mirror
+image, with D-SW-1 as its partner:
+
+```
+D-SW-1#show etherchannel summary
+...
+Group  Port-channel  Protocol    Ports
+------+-------------+-----------+-----------------------------------------------
+1      Po1(SU)         LACP      Gi0/0(P)    Gi0/1(P)
+
+D-SW-1#show lacp neighbor
+...
+Channel group 1 neighbors
+
+Partner's information:
+
+                  LACP port                        Admin  Oper   Port    Port
+Port      Flags   Priority  Dev ID          Age    key    Key    Number  State
+Gi0/0     SA      32768     5000.0006.8000  24s    0x0    0x1    0x1     0x3D
+Gi0/1     SA      32768     5000.0006.8000  26s    0x0    0x1    0x2     0x3D
+```
+
 `Po1` must carry **no** IP address and **no** OSPF. If `show ip interface brief`
 lists an address on it, that is a deviation from the design.
 

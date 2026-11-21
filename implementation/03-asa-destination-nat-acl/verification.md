@@ -14,10 +14,10 @@ it before moving on, because later checks depend on it.
   [`configs/`](configs/), or — where it is labelled as such — the broken line
   from the first build of this lab.
 - Where the only evidence retained is the automated harness's own result line,
-  that line is shown instead and said to be one. The harness prints its check
-  names in Spanish and its output is reproduced unedited rather than retyped;
-  the numbers (hit counts, ping counts, hop lists, TTLs) are the evidence, and
-  they are language-neutral.
+  that line is shown instead and said to be one. The harness printed its check
+  names in Spanish; they are translated here, and nothing else in those lines
+  was touched: the numbers (hit counts, ping counts, hop lists, TTLs) are the
+  evidence, exactly as the run produced them.
 
 The full run is **45 automated checks, 0 failures**.
 
@@ -91,7 +91,7 @@ Stop it, **Wipe** it, start it again.
 **Measured** — 10 of 10, harness output:
 
 ```
-1. Los equipos arrancaron con su configuracion
+1. The devices booted with their configuration
   OK    R-Client
   OK    SW-A
   OK    SW-B
@@ -103,13 +103,13 @@ Stop it, **Wipe** it, start it again.
   OK    Server-B
   OK    SRV-ISP
 
-2. Direccionamiento
-  OK    R-Client tiene sus 2 direcciones
-  OK    SW-A tiene sus 4 direcciones
-  OK    SW-B tiene sus 4 direcciones
-  OK    R-ISP tiene sus 3 direcciones
-  OK    ASA outside 203.0.113.2 e inside 192.0.2.1
-  OK    Server-A esta en Site-B con 10.100.100.10
+2. Addressing
+  OK    R-Client has its 2 addresses
+  OK    SW-A has its 4 addresses
+  OK    SW-B has its 4 addresses
+  OK    R-ISP has its 3 addresses
+  OK    ASA outside 203.0.113.2 and inside 192.0.2.1
+  OK    Server-A is in Site-B at 10.100.100.10
 ```
 
 That is 13 routed addresses on the four IOS nodes, the ASA's two interface
@@ -157,16 +157,16 @@ neighbour each, the two switches see two each, and R-Client sees none.
 **Measured:**
 
 ```
-3. OSPF vive solo dentro del firewall
-  OK    ASA: una adyacencia, y por inside                      1 vecinos
-  OK    SW-A: dos vecinos FULL
-  OK    SW-B: dos vecinos FULL
-  OK    R-ISP: un vecino FULL
-  OK    R-Client: NINGUN vecino OSPF (FIX-3)
+3. OSPF lives inside the firewall only
+  OK    ASA: one adjacency, on inside                          neighbours=1
+  OK    SW-A: two FULL neighbours
+  OK    SW-B: two FULL neighbours
+  OK    R-ISP: one FULL neighbour
+  OK    R-Client: NO OSPF neighbour (FIX-3)
 
-4. El cliente externo no conoce la red interna
-  OK    R-Client no aprende ningun prefijo interno
-  OK    R-Client solo tiene la ruta por defecto hacia el ASA
+4. The external client does not know the internal network
+  OK    R-Client learns no internal prefix
+  OK    R-Client only has the default route toward the ASA
 ```
 
 The ASA check is two assertions in one line: exactly one `FULL` neighbour, and
@@ -202,10 +202,10 @@ Server-B> ping 192.168.1.11  -c 4      (Site-B  -> PC-A)
 **Measured** — 16 of 16 replies:
 
 ```
-5. Conectividad interna
-  OK    PC-A -> Server-B (Site-A a Site-B)                     4/4
-  OK    PC-A -> servidor del ISP                               4/4
-  OK    Server-B -> servidor del ISP                           4/4
+5. Internal connectivity
+  OK    PC-A -> Server-B (Site-A to Site-B)                    4/4
+  OK    PC-A -> ISP server                                     4/4
+  OK    Server-B -> ISP server                                 4/4
   OK    Server-B -> PC-A                                       4/4
 ```
 
@@ -239,9 +239,9 @@ Expected: the rule ends in `... destination static VIP_SERVER_A SERVER_A`, and
 **Measured**, with Server-A in Site-B:
 
 ```
-6. La regla de NAT esta completa y traduce
+6. The NAT rule is complete and translates
   OK    nat ... destination static VIP_SERVER_A SERVER_A (FIX-1)
-  OK    la regla acumula aciertos                              translate_hits = 44, untranslate_hits = 68
+  OK    the rule accumulates hits                              translate_hits = 44, untranslate_hits = 68
   OK    Destination Origin 198.51.100.8 -> Translated 10.100.100.10
 ```
 
@@ -322,10 +322,10 @@ and at least one ACE has a non-zero counter.
 **Measured:**
 
 ```
-7. La ACL se evalua contra la direccion REAL (FIX-2)
-  OK    la ACL expande el objeto a host 10.100.100.10
-  OK    y NO contiene la direccion virtual
-  OK    hay ACE con contador distinto de cero                  hitcnts=[14, 4, 1]
+7. The ACL is evaluated against the REAL address (FIX-2)
+  OK    the ACL expands the object to host 10.100.100.10
+  OK    and does NOT contain the virtual address
+  OK    there are ACEs with a non-zero counter                 hitcnts=[14, 4, 1]
 ```
 
 `hitcnts` is the harness printing the *distinct* hit counts it found across the
@@ -409,9 +409,9 @@ is dynamic — those *do* age out, at 30 seconds.
 The harness runs the same two checks:
 
 ```
-8. El cliente externo alcanza la IP virtual
+8. The external client reaches the virtual IP
   OK    PC-Ext -> 198.51.100.8                                 4/4
-  OK    show xlate enseña la traduccion estatica
+  OK    show xlate shows the static translation
 ```
 
 Its second check asserts both halves of the string —
@@ -440,8 +440,8 @@ destination to `10.100.100.10`.
 two quoted in section 6:
 
 ```
-  OK    packet-tracer HTTPS (tcp/443) -> allow hasta 10.100.100.10
-  OK    packet-tracer SSH (tcp/22) -> allow hasta 10.100.100.10
+  OK    packet-tracer HTTPS (tcp/443) -> allow up to 10.100.100.10
+  OK    packet-tracer SSH (tcp/22) -> allow up to 10.100.100.10
 ```
 
 **Read that check name carefully.** It says "allow hasta 10.100.100.10", but the
@@ -476,10 +476,10 @@ the time the ACL is evaluated the destination has already been un-NATed.
 **Measured:**
 
 ```
-9. Lo que la ACL no permite se cae
+9. What the ACL does not permit is dropped
   OK    packet-tracer tcp/80 -> drop
-  OK    y la razon es la ACL
-  OK    el syslog registra el deny contra la direccion real
+  OK    and the reason is the ACL
+  OK    syslog records the deny against the real address
 ```
 
 Three separate assertions, and the third is the interesting one. It requires two
@@ -507,9 +507,9 @@ Expected: hops all the way to the virtual address, and the ASA at hop 1.
 **Measured**, with Server-A in Site-B:
 
 ```
-10. El traceroute devuelve saltos
-  OK    traceroute llega a la IP virtual                       saltos=['203.0.113.2', '192.0.2.2', '192.0.2.6', '198.51.100.8']
-  OK    el ASA aparece como primer salto (decrement-ttl)       primero=['203.0.113.2']
+10. Traceroute returns hops
+  OK    traceroute reaches the virtual IP                      hops=['203.0.113.2', '192.0.2.2', '192.0.2.6', '198.51.100.8']
+  OK    the ASA shows up as the first hop (decrement-ttl)      first=['203.0.113.2']
 ```
 
 Four hops: the ASA outside interface, SW-A, SW-B, then the server behind its
@@ -591,10 +591,10 @@ Same VLAN, same access configuration, same portfast — the difference between t
 two ports is a cable, not a config. The harness checks this too:
 
 ```
-2b. Server-A tiene UN SOLO cable, y la otra sede lo espera
-  OK    SW-B Gi0/0 va a Server-A
-  OK    SW-A Gi0/0 esta reservado y sin cable
-  OK    y sigue siendo un puerto de acceso de la VLAN 10
+2b. Server-A has ONE cable, and the other site is waiting for it
+  OK    SW-B Gi0/0 goes to Server-A
+  OK    SW-A Gi0/0 is reserved and has no cable
+  OK    and is still an access port in VLAN 10
 ```
 
 State of the firewall before the move — the static entry only; the same capture
