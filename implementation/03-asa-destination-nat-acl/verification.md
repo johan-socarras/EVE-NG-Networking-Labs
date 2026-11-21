@@ -12,7 +12,7 @@ it before moving on, because later checks depend on it.
   counters in another.
 - A block with no prompt is either a configuration line quoted from
   [`configs/`](configs/), or — where it is labelled as such — the broken line
-  from the published version of this lab.
+  from the first build of this lab.
 - Where the only evidence retained is the automated harness's own result line,
   that line is shown instead and said to be one. The harness prints its check
   names in Spanish and its output is reproduced unedited rather than retyped;
@@ -35,7 +35,7 @@ section 8 cannot pass on an ASA with logging off — but no check asserts that
 SW-B's stray default route is gone, and **no check touches FIX-4 at all**: the
 switches' SSH configuration and the ASA's key-exchange group are read out of
 [`configs/`](configs/), not measured. The README lists all eight differences
-from the published version.
+from the first build.
 
 Console ports are assigned by EVE-NG as `32768 + node id`:
 
@@ -136,7 +136,7 @@ MTU         : 1500
 
 ## 2. OSPF lives inside the firewall only
 
-The published version of this lab ran OSPF **through** the ASA, so the external
+The first build of this lab ran OSPF **through** the ASA, so the external
 client learned the entire internal topology from the device that exists to hide
 it. Here the ASA speaks OSPF on `inside` only, with MD5 authentication, and
 R-Client keeps a single static default route.
@@ -217,7 +217,7 @@ a check at 3 replies out of 4 and still measured 4/4 on every pair.
 
 ## 4. The NAT rule is complete, and it translates
 
-This is FIX-1. In the published lab the rule ended at the mapped object:
+This is FIX-1. In the first build the rule ended at the mapped object:
 
 ```
 nat (outside,inside) source dynamic CLIENT_LAN interface destination static VIP_SERVER_A
@@ -288,7 +288,7 @@ what the check actually requires is only that `untranslate_hits` is non-zero.
 
 ## 5. The ACL is evaluated against the REAL address
 
-This is FIX-2, and it is the subtlest error in the published lab. That version
+This is FIX-2, and it is the subtlest error in the first build. That version
 filtered on the mapped address:
 
 ```
@@ -491,7 +491,7 @@ the bug FIX-2 exists to remove.
 
 As with section 7, the capture is the assertion rather than the raw log line;
 `show logging | include 106023` prints it on a running lab. Note that this check
-depends on FIX-5 — the published lab had no `logging enable`, so the ASA kept no
+depends on FIX-5 — the first build had no `logging enable`, so the ASA kept no
 record of anything it denied.
 
 ---
@@ -517,7 +517,7 @@ virtual address. Reading them left to right is reading the path the packet takes
 through the lab.
 
 Three configuration items are required for this to work at all. They are the
-traceroute correction — item 5 in the README's list of what the published lab got
+traceroute correction — item 5 in the README's list of what the first build got
 wrong. They carry no `FIX-n` tag because no single automated check isolates them;
 what proves them is the hop list above:
 

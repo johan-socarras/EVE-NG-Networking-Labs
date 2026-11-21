@@ -67,6 +67,11 @@ Distribution switch a VLAN's traffic goes through.
 anywhere without colliding with a real network, and no host route ever leaks
 toward something that exists.
 
+**The management plane is out of scope here.** These ten devices carry no
+`enable secret`, no local user and no SSH, and their VTY lines are left as IOS
+ships them. This lab is about redundancy; hardened management access is built
+and verified in [IMP-01](../01-multi-site-collapsed-core/README.md).
+
 Full addressing and the interface-by-interface map: [`addressing-plan.md`](addressing-plan.md).
 Test procedure and expected output: [`verification.md`](verification.md).
 

@@ -67,7 +67,7 @@ is; at the same time its **source** is PAT'd behind the inside interface
 (`192.0.2.1`), so the server answers the firewall rather than the client. That
 half is not decoration: nothing inside this lab has a route to
 `203.0.113.32/27` — the ASA does not advertise it into OSPF, and SW-B's stray
-default route is gone (item 7 of "What was wrong in the published version") — so
+default route is gone (item 7 of "What an earlier build got wrong") — so
 a reply addressed straight to the client would die inside. `show nat detail`
 shows both halves, here with the server in Site-A:
 
@@ -167,8 +167,8 @@ is declared here rather than left to be found later.
 
 ## Why traceroute works here
 
-In the published version of this lab the traceroute was explained away instead of
-being made to work. Three separate reasons, all of them fixed here:
+An earlier build of this lab explained the traceroute away instead of making it
+work. Three separate reasons, all of them fixed here:
 
 1. **The ASA does not decrement the TTL by default.** A firewall that does not
    decrement it never generates the "time exceeded" a traceroute hop is made of,
@@ -220,10 +220,10 @@ carried by `show nat detail` and by the expanded ACL rather than by the retained
 which output proves which half. Whether a server on the far end answers is out
 of scope.
 
-## What was wrong in the published version
+## What an earlier build got wrong
 
-This lab was rebuilt from scratch. Eight things are different from the version
-that is on GitHub, and each one is a defect that was found and corrected rather
+This lab was rebuilt from scratch. Eight things are different from its first
+build, and each one is a defect that was found and corrected rather
 than a stylistic preference.
 
 1. **The NAT rule was incomplete.** It ended at the mapped object, and the ASA
@@ -244,10 +244,11 @@ than a stylistic preference.
 5. **Traceroute works**, rather than being explained away: `inspect icmp`,
    `inspect icmp error` and `set connection decrement-ttl`.
 6. **Addressing.** Everything public-facing is now in RFC 5737 documentation
-   space. The virtual address moved from `8.8.8.8` to `198.51.100.8`, and the ISP
-   network from `4.4.4.0/29` to `198.51.100.0/29`.
+   space. The first build borrowed real, routable addresses for the virtual
+   address and the ISP network; they are now `198.51.100.8` and
+   `198.51.100.0/29`.
 7. **Logging, SSH and a stray route.** The ASA now has logging enabled, so a deny
-   leaves a trace. The switches have working SSH: the published configs had
+   leaves a trace. The switches have working SSH: the first build's configs had
    `login` with no password, which rejects every attempt, plus orphan
    `ip ssh server algorithm` lines with no RSA key and no local user. SW-B's
    loose default route, which was never redistributed and which SW-A therefore

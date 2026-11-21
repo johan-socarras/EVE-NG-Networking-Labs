@@ -110,15 +110,16 @@ demonstrable rather than merely configured.
 
 ## Platform notes
 
-Both of these are limitations of the images, not of the design, and both are
-stated here rather than hidden.
+Neither of these is a design choice, and both are stated here rather than
+hidden.
 
-**EtherChannel is static, because LACP does not negotiate over EVE-NG bridges.**
+**EtherChannel is static, because LACP did not negotiate in this lab.**
 Configured with `channel-group N mode active` on both ends, every bundle stayed
 `Po1(SD)` with its members suspended and `show lacp neighbor` empty on both
-sides. The same links carry STP BPDUs and CDP fine, and the bundles come up
-immediately with `mode on`. LACP frames use the slow-protocols multicast address
-and do not cross. See [`verification.md`](verification.md) §10.
+sides. The same links carried STP BPDUs and CDP fine, and the bundles came up
+immediately with `mode on`. It is not a property of EVE-NG: IMP-02 and TSH-01,
+on the same host and the same IOSvL2 image, negotiate LACP normally. The cause
+here was never tracked down. See [`verification.md`](verification.md) §10.
 
 **SSH MAC algorithms are hardened on the routers only.** `ip ssh server algorithm
 mac hmac-sha2-256 hmac-sha2-512` is accepted by IOSv 15.9 but not implemented by

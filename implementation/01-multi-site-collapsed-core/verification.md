@@ -331,12 +331,13 @@ Real problems hit while building this lab, and what each one actually was.
 
 **Port-channels stuck with members suspended.** Both ends configured
 `channel-group N mode active`, both ends showing `(s)`, and `show lacp neighbor`
-empty on both sides. It is not a configuration error: **LACP frames do not cross
-the EVE-NG bridges.** Three tests isolate it — removing the `channel-group`
+empty on both sides. It was not a configuration error that could be found: **in this lab the LACP
+frames did not get through.** Three tests narrow it down — removing the `channel-group`
 brings the plain trunk up with CDP working; identical LACP config on both ends
-still shows no neighbour; `mode on` bundles immediately. STP and CDP cross the
-same links fine, so it is specific to the slow-protocols multicast address LACP
-uses. The bundles in this lab are static as a result.
+still shows no neighbour; `mode on` bundles immediately. STP and CDP crossed the
+same links fine. The cause was never tracked down, and it is not EVE-NG itself:
+IMP-02 and TSH-01, on the same host, negotiate LACP normally. The bundles in this
+lab are static as a result.
 
 **A second member suspended while the first bundles.** Different cause, same
 symptom: the members of one port-channel must have **identical** switchport

@@ -5,11 +5,11 @@
 endpoints cost essentially nothing).
 
 All addressing below is taken from the rebuilt lab and from the saved
-verification run, not from the earlier revision published on GitHub. Everything
+verification run, not from its first build. Everything
 that represents the public Internet uses documentation-only ranges (RFC 5737),
-so the lab is portable and never collides with a real network. The previous
-revision advertised `8.8.8.8` as the virtual address and `4.4.4.0/29` as the ISP
-segment; both are real, routable addresses and both are gone.
+so the lab is portable and never collides with a real network. The first
+build used real, routable addresses for the virtual address and the ISP
+segment; both are gone.
 
 The whole lab exists to make one sentence true: **an external client always
 reaches Server-A at `198.51.100.8`, and that stays true when the server moves to
@@ -83,8 +83,8 @@ lab and none is implied.
 | `192.0.2.8/30` | SW-B | Gi0/3 | `.9` | R-ISP | Gi0/1 | `.10` |
 | `198.51.100.0/29` | R-ISP | Gi0/0 | `.1` | SRV-ISP | eth0 | `.4` |
 
-The client LAN is a `/27` rather than a `/32` host route. In the published
-revision the NAT source object was a single host, so there was no client
+The client LAN is a `/27` rather than a `/32` host route. In the first
+build the NAT source object was a single host, so there was no client
 network to speak of. A real `/27` makes `nat ... source dynamic CLIENT_LAN
 interface` mean what it says, and makes the return route on the firewall a
 real prefix —
@@ -114,7 +114,7 @@ attempted toward the hosts.
 | SRV-ISP | ISP segment | `198.51.100.4/29` | `198.51.100.1` | R-ISP Gi0/0 |
 | **Server-A** | **Site-B, VLAN 10 (current)** | **`10.100.100.10/24`** | `10.100.100.1` | **SW-B Gi0/0 — its only cable** |
 
-Server-A appears once, because there is one of it. The published revision listed
+Server-A appears once, because there is one of it. The first build listed
 it in both sites, which quietly turned a site migration into a `shutdown`
 exercise and taught the wrong thing.
 
@@ -176,7 +176,7 @@ alone, the device picks the highest interface address and the ID changes the day
 an interface does.
 
 R-Client having no router ID is a design decision, not an omission. In the
-published revision OSPF crossed the firewall and handed the external client the
+first build OSPF crossed the firewall and handed the external client the
 whole internal topology. Now the firewall speaks OSPF on `inside` only, with MD5
 authentication, and R-Client keeps a single default route. The verification
 confirms both halves: R-Client has no OSPF neighbour, and R-Client learns no
@@ -212,8 +212,8 @@ traceroute section works.
 
 Two things about those five lines matter for addressing.
 
-**The NAT rule ends at `SERVER_A`, not at the mapped object.** In the published
-revision it stopped after the mapped object; the ASA rejects that with
+**The NAT rule ends at `SERVER_A`, not at the mapped object.** In the first
+build it stopped after the mapped object; the ASA rejects that with
 `Incomplete command`, and `SERVER_A` was left defined and unused. The rule only
 becomes a destination NAT when it ends `destination static VIP_SERVER_A
 SERVER_A`.

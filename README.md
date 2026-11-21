@@ -72,17 +72,19 @@ Technologies practiced:
 
 ### IMP-03 — ASA Destination NAT and ACL
 
-A firewall lab demonstrating how external clients can access an internal server through a fixed destination IP using Cisco ASA destination NAT and ACLs.
+An external client always reaches a server at one fixed address that belongs to
+no subnet in the lab. The server lives in one of two sites, and when it moves,
+one line changes on the firewall: the client is never told and the ACL is not
+touched.
 
 Technologies practiced:
 
-- Cisco ASA
-- Destination NAT
-- Access control lists
-- Static and dynamic routing
-- Inter-site connectivity
-- Firewall troubleshooting
-- Connectivity verification
+- Twice NAT on a Cisco ASA: destination translation and source PAT in one rule
+- An interface ACL written against the real address, built from network objects
+- `packet-tracer`, `show nat detail` and ACL hit counters as evidence
+- OSPF kept inside the firewall and authenticated; nothing peers with the outside
+- A traceroute that survives the firewall, and what that exposes
+- RFC 5737 documentation addressing for everything public-facing
 
 [View Lab](implementation/03-asa-destination-nat-acl/README.md)
 
