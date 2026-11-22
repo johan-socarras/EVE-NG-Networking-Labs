@@ -444,7 +444,7 @@ two quoted in section 6:
   OK    packet-tracer SSH (tcp/22) -> allow up to 10.100.100.10
 ```
 
-**Read that check name carefully.** It says "allow hasta 10.100.100.10", but the
+**Read that check name carefully.** It says "allow up to 10.100.100.10", but the
 only thing the harness asserts is that `Action: allow` appears in the ASA's
 output. It does not parse the `UN-NAT` phase, and no full `packet-tracer`
 transcript was retained — the real address in the check name comes from the
