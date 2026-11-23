@@ -242,10 +242,11 @@ Each of these breaks the lab; none of them is a matter of style.
    documentation space: the virtual address is `198.51.100.8` and the ISP network
    `198.51.100.0/29`.
 7. **No logging, unusable SSH and a stray route.** The ASA has logging enabled,
-   so a deny leaves a trace. The switches have working SSH: `login` with no
-   password rejects every attempt, and `ip ssh server algorithm` lines do nothing
-   without an RSA key and a local user. No internal device carries a default
-   route: everything internal is learned by OSPF.
+   so a deny leaves a trace. SSH on the switches works, with a local user and
+   `login local`: a bare `login` with no password rejects every attempt, and
+   `ip ssh server algorithm` lines do nothing without an RSA key and a local
+   user. No internal device carries a default route: everything internal is
+   learned by OSPF.
 8. **An ASAv without `console serial`.** It boots, forwards traffic and answers
    pings, and its console can never be reached — see
    [Platform notes](#platform-notes).

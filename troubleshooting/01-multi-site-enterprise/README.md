@@ -247,7 +247,14 @@ the incident is closed.
    startup-configs — never arrive. Start the qemu nodes in batches. With the
    memory above, all 23 nodes running used 45 % of a 15 GB EVE-NG VM; stop any
    other lab first.
-4. **Three first-boot effects that belong to the platform, not to the exercise:**
+4. **Four first-boot effects that belong to the platform, not to the exercise:**
+   - VTP and the VLANs are not part of a startup-config. A VTP server or client
+     keeps its domain, its mode and its VLANs in `vlan.dat`, and a wiped node has
+     none. On every switch set `vtp version 2`, the site's `vtp domain` and
+     `vtp mode client` (`server` on `*-DIST-A`), then create the site's VLANs on
+     `*-DIST-A`: the values are in
+     [`addressing-plan.md`](addressing-plan.md#vtp-and-spanning-tree). Do it
+     first, the SVIs need their VLANs.
    - An SVI that comes from an injected startup-config stays `down/down` on
      IOSvL2 (`show ip interface brief` shows `Method TFTP`). Delete and recreate
      it with its own lines: `show running-config interface VlanN`, then

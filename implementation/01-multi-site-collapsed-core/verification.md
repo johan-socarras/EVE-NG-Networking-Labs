@@ -259,7 +259,7 @@ the access switches have both:
 CSW-DC-01#ssh -l netadmin 10.0.10.11
 ```
 
-**Measured:** works from both multilayer switches into their access switches
+**Measured:** works from two multilayer switches into their access switches
 (`CSW-DC-01 → ASW-DC-01`, `CSW-A-01 → ASW-A-01`), reaching an enabled prompt and
 running `show version`.
 

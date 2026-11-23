@@ -2,8 +2,6 @@
 ! CSW-DC-01 - sanitized device configuration
 ! IMP-01 - collapsed-core enterprise LAN
 !
- NVRAM config last updated at 04:41:24 UTC Thu Sep 10 2026 by netadmin
-!
 service timestamps debug datetime msec localtime
 service timestamps log datetime msec localtime
 service password-encryption
