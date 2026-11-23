@@ -2,8 +2,7 @@
 
 18 nodes · 26 links · 4 user VLANs
 
-All addressing below is taken from the running lab topology, not from an earlier
-draft. Documentation-only ranges (RFC 5737) are used for anything representing
+All addressing below is taken from the running lab topology. Documentation-only ranges (RFC 5737) are used for anything representing
 the public Internet, so the lab is portable and never collides with a real
 network.
 
@@ -41,10 +40,8 @@ Every Core–Distribution pair is a routed `/30`. Each Distribution switch reach
 | `10.0.0.12/30` | C-SW-2 | Gi0/1 | `.13` | D-SW-2 | Gi0/2 | `.14` |
 | `10.0.0.20/30` | C-SW-1 | Gi0/3 | `.21` | C-SW-2 | Gi0/3 | `.22` |
 
-`10.0.0.16/30` is deliberately left unused: it belonged to the Distribution–
-Distribution routed link of an earlier revision, which is now a Layer 2
-EtherChannel instead. It is reserved rather than reassigned so that older
-diagrams remain unambiguous.
+`10.0.0.16/30` is left unassigned: the Distribution–Distribution link is a
+Layer 2 EtherChannel and needs no subnet.
 
 ## Internet edge
 
@@ -66,7 +63,7 @@ The peering `/30` sits inside `203.0.113.0/24` without colliding with the two
 Both Core devices originate a default route, so campus traffic toward the
 Internet is load-shared across the two upstreams. Without a link between the
 ISPs each one knows only its own loopback, and roughly half the traffic to
-`203.0.113.1` / `203.0.113.2` died at whichever ISP the hash happened to pick.
+`203.0.113.1` / `203.0.113.2` dies at whichever ISP the hash happens to pick.
 One peering link and one static route per side fixes that, and it doubles as the
 recovery path when an upstream fails.
 

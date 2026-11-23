@@ -4,12 +4,10 @@
 (4 × 1024 MB for the IOSv/IOSvL2 nodes, 2048 MB for the ASAv; the five VPCS
 endpoints cost essentially nothing).
 
-All addressing below is taken from the rebuilt lab and from the saved
-verification run, not from its first build. Everything
-that represents the public Internet uses documentation-only ranges (RFC 5737),
-so the lab is portable and never collides with a real network. The first
-build used real, routable addresses for the virtual address and the ISP
-segment; both are gone.
+All addressing below is taken from the running lab and from the saved
+verification run. Everything that represents the public Internet uses
+documentation-only ranges (RFC 5737), so the lab is portable and never collides
+with a real network.
 
 The whole lab exists to make one sentence true: **an external client always
 reaches Server-A at `198.51.100.8`, and that stays true when the server moves to
@@ -83,18 +81,16 @@ lab and none is implied.
 | `192.0.2.8/30` | SW-B | Gi0/3 | `.9` | R-ISP | Gi0/1 | `.10` |
 | `198.51.100.0/29` | R-ISP | Gi0/0 | `.1` | SRV-ISP | eth0 | `.4` |
 
-The client LAN is a `/27` rather than a `/32` host route. In the first
-build the NAT source object was a single host, so there was no client
-network to speak of. A real `/27` makes `nat ... source dynamic CLIENT_LAN
-interface` mean what it says, and makes the return route on the firewall a
-real prefix —
+The client LAN is a `/27` rather than a `/32` host route, so
+`nat ... source dynamic CLIENT_LAN interface` means what it says and the return
+route on the firewall is a real prefix —
 `route outside 203.0.113.32 255.255.255.224 203.0.113.1 1`.
 
 ## Site VLANs
 
 One VLAN per site, same ID on both, different subnets. The gateway is the SVI on
-that site's multilayer switch; there is no first-hop redundancy here, and
-pretending otherwise would be dishonest — IMP-02 is where FHRP lives.
+that site's multilayer switch; there is no first-hop redundancy here — IMP-02 is
+where FHRP lives.
 
 | Site | VLAN | Name | Subnet | Gateway | Gateway lives on | OSPF |
 |---|---|---|---|---|---|---|
@@ -114,17 +110,14 @@ attempted toward the hosts.
 | SRV-ISP | ISP segment | `198.51.100.4/29` | `198.51.100.1` | R-ISP Gi0/0 |
 | **Server-A** | **Site-B, VLAN 10 (current)** | **`10.100.100.10/24`** | `10.100.100.1` | **SW-B Gi0/0 — its only cable** |
 
-Server-A appears once, because there is one of it. The first build listed
-it in both sites, which quietly turned a site migration into a `shutdown`
-exercise and taught the wrong thing.
+Server-A appears once, because there is one of it.
 
 ### Server-A has one cable
 
-A server is not in two cities at once, so it is not wired to two sites. Server-A
-is a VPCS with a single `eth0`, plugged into whichever site it currently lives
-in. **Right now that is Site-B.** The other site keeps an access port waiting for
-it: same VLAN, never shut, fully configured, and with nothing plugged into it —
-so it is `down/down` until the server arrives, which is exactly right.
+Server-A is a VPCS with a single `eth0`, plugged into the site it lives in —
+Site-B as shipped. The other site keeps a VLAN 10 access port waiting for it,
+never shut and with nothing plugged in, so it is `down/down` until the server
+arrives. Why, in the README: [Server-A has one cable](README.md#server-a-has-one-cable).
 
 | Site | Port | State | Description in the config |
 |---|---|---|---|
@@ -137,16 +130,9 @@ configs separately — SW-B `Gi0/0` described toward Server-A, SW-A `Gi0/0`
 described as reserved and uncabled, and SW-A `Gi0/0` still carrying
 `switchport access vlan 10` — so the reservation cannot rot unnoticed.
 
-Moving the server means moving the cable: out of SW-B `Gi0/0`, into SW-A
-`Gi0/0`. It is a real recable, not a `shutdown`, and it is done by hand on the
-EVE-NG canvas, with the three nodes the cable touches stopped first: Server-A,
-SW-B and SW-A. The REST API can do it too, with two catches: the new
-network must be created with `visibility: 1` — with `0` the interface `PUT`s
-answer `fail` — and the `POST` and the two `PUT`s must not yield between them,
-or EVE-NG purges the network for having no endpoints.
-
-Either way the cable really moves, and that is the right price for representing
-the scenario honestly.
+Moving the server means moving the cable, out of SW-B `Gi0/0` and into SW-A
+`Gi0/0`: the steps are in
+[Moving Server-A between sites](README.md#moving-server-a-between-sites).
 
 ### The two addresses Server-A can have
 
@@ -175,10 +161,9 @@ is never advertised. Router IDs are pinned everywhere for the usual reason: left
 alone, the device picks the highest interface address and the ID changes the day
 an interface does.
 
-R-Client having no router ID is a design decision, not an omission. In the
-first build OSPF crossed the firewall and handed the external client the
-whole internal topology. Now the firewall speaks OSPF on `inside` only, with MD5
-authentication, and R-Client keeps a single default route. The verification
+R-Client having no router ID is a design decision, not an omission: the firewall
+speaks OSPF on `inside` only, with MD5 authentication, and R-Client keeps a
+single default route. The verification
 confirms both halves: R-Client has no OSPF neighbour, and R-Client learns no
 internal prefix.
 
@@ -194,42 +179,11 @@ one line.
 | `CLIENT_LAN` | subnet | `203.0.113.32 255.255.255.224` | The external client LAN behind R-Client. Source of the NAT rule, source of every ACE. |
 | `VIP_SERVER_A` | host | `198.51.100.8` | The fixed virtual address published to clients. Belongs to no subnet in the lab. |
 
-They are used in exactly two constructs — one NAT rule and one ACL:
-
-```
-nat (outside,inside) source dynamic CLIENT_LAN interface destination static VIP_SERVER_A SERVER_A
-access-list OUTSIDE_IN extended permit icmp object CLIENT_LAN object SERVER_A echo
-access-list OUTSIDE_IN extended permit tcp object CLIENT_LAN object SERVER_A eq ssh
-access-list OUTSIDE_IN extended permit tcp object CLIENT_LAN object SERVER_A eq https
-access-list OUTSIDE_IN extended permit udp object CLIENT_LAN object SERVER_A range 33434 33463
-```
-
-Two of those ACEs carry a caveat, spelled out in full under "Addresses the
-outside world can see": Server-A is a VPCS and answers neither SSH nor HTTPS, so
-those two lines prove the firewall permits and translates the flow and nothing
-more; and the UDP range is a deliberate exception to the policy, added so the
-traceroute section works.
-
-Two things about those five lines matter for addressing.
-
-**The NAT rule ends at `SERVER_A`, not at the mapped object.** In the first
-build it stopped after the mapped object; the ASA rejects that with
-`Incomplete command`, and `SERVER_A` was left defined and unused. The rule only
-becomes a destination NAT when it ends `destination static VIP_SERVER_A
-SERVER_A`.
-
-**The ACL is written against the real address, not the virtual one.** Since ASA
-8.3 an interface ACL is evaluated *after* the destination has been untranslated,
-so `permit tcp any host 198.51.100.8` never matches anything. Using the object
-fixes that and, as a side effect, makes the lab's promise true — the ACL follows
-the server automatically. You can see the object expand:
-
-```
-access-list OUTSIDE_IN line 1 extended permit icmp 203.0.113.32 255.255.255.224 host 10.100.100.10 echo (hitcnt=7)
-```
-
-and after the migration, with nothing in the ACL edited, the same line reads
-`host 192.168.1.10`.
+They are used in exactly two constructs, the NAT rule in
+[How the translation works](README.md#how-the-translation-works) and the ACL in
+[Security policy](README.md#security-policy). Why the rule has to end at
+`SERVER_A`, and why the ACL is written against the real address, is in the
+README's [eight mistakes](README.md#eight-mistakes-this-build-avoids).
 
 ## What changes when the server moves
 
@@ -247,15 +201,8 @@ The evidence is a before/after pair taken from the running lab. With Server-A in
 Site-B, `show xlate` reads `NAT from inside:10.100.100.10 to
 outside:198.51.100.8`; after the migration to Site-A the same command reads
 `NAT from inside:192.168.1.10 to outside:198.51.100.8`, and `show nat detail`
-shows the same rule with only the destination translation different:
-
-```
-Manual NAT Policies (Section 1)
-1 (outside) to (inside) source dynamic CLIENT_LAN interface  destination static VIP_SERVER_A SERVER_A
-    translate_hits = 21, untranslate_hits = 30
-    Source - Origin: 203.0.113.32/27, Translated: 192.0.2.1/30
-    Destination - Origin: 198.51.100.8/32, Translated: 192.168.1.10/32
-```
+shows the same rule with only the destination translation different (the full
+output is in [`verification.md`](verification.md)).
 
 PC-Ext's ping to `198.51.100.8` succeeds 4/4 both times. The only thing that
 changes in the ping is the TTL — 60 from Site-B, 61 from Site-A — because Site-A
@@ -264,36 +211,13 @@ is in the next section.
 
 ## Addresses the outside world can see
 
-Three points here are worth stating plainly rather than hiding.
-
-**Server-A is a VPCS. It does not serve SSH or HTTPS.** The `eq ssh` and
-`eq https` ACEs demonstrate that the firewall *permits and translates* those
-flows all the way to the real address — `packet-tracer` returns `Action: allow`,
-the ACEs expand to `host 10.100.100.10` and accumulate hits, and `show nat
-detail` carries the destination translation itself. Whether a service answers on the far end is out of scope for this lab, and
-the verification does not claim otherwise.
-
-**The UDP range `33434`–`33463` is a deliberate exception.** The stated policy
-of `OUTSIDE_IN` is ICMP echo, SSH and HTTPS only. That fourth ACE exists so the
-traceroute section of the lab works, and it is documented as an exception rather
-than smuggled in as if it belonged.
-
-**Turning on `inspect icmp error` exposes internal addresses.** It is what makes
-traceroute return hops instead of stars, together with `inspect icmp` and
-`set connection decrement-ttl` on `class-default`. The price is that the
-external client sees transit addresses it would not otherwise see. With
-Server-A in Site-B, a trace run from R-Client sourced on its client-LAN
-interface (`203.0.113.33`) returns these four hops:
-
-```
-203.0.113.2   192.0.2.2   192.0.2.6   198.51.100.8
-```
-
-`192.0.2.2` is SW-A and `192.0.2.6` is SW-B. After the migration to Site-A the
-trace is one hop shorter — `203.0.113.2`, `192.0.2.2`, `198.51.100.8` — because
-SW-B is no longer on the path. In both cases the final hop is reported as
-`198.51.100.8`: the real address of the server never appears outside the
-firewall.
+`inspect icmp error` lets a traceroute from outside see two inside transit
+addresses: `192.0.2.2` (SW-A) and, with Server-A in Site-B, `192.0.2.6` (SW-B).
+The final hop is always reported as `198.51.100.8`: the real address of the
+server never appears outside the firewall. Why the lab accepts that, and the
+caveats on the SSH, HTTPS and UDP ACEs, are in the README:
+[Why traceroute works here](README.md#why-traceroute-works-here) and
+[What this lab does not prove](README.md#what-this-lab-does-not-prove).
 
 ## Interface map
 
@@ -340,21 +264,12 @@ not `GigabitEthernet0/0`. Copying an IOSv mapping shifts the firewall's entire
 cabling by one position, and the symptom is an ASA that boots perfectly and sees
 nobody. `Gi0/0` is `outside`, `Gi0/1` is `inside`.
 
-**The ASAv needs `console serial`.** Without it the appliance boots fine and its
-serial console stays silent forever, which in EVE-NG looks exactly like a dead
-node. It is in the skeleton config for that reason, and it is kept in the
-published config on purpose.
-
-**The SVI needs to be recreated by hand.** An SVI that comes from the
-startup-config EVE-NG injects stays `down/down` even with the VLAN active and
-its access ports forwarding; neither `no shutdown` nor bouncing a port fixes it.
-`no interface Vlan10` followed by re-entering it does. The tell is the `Method`
-column of `show ip interface brief`: `TFTP` while it is broken, `manual` once
-it has been rebuilt.
+The `console serial` line and the SVI that has to be recreated by hand are in the
+README's [Platform notes](README.md#platform-notes).
 
 ## Verification
 
-The rebuilt lab passes 45 automated checks with zero failures, covering
+The lab passes 45 automated checks with zero failures, covering
 addressing, the single-cable rule and its reserved port, OSPF containment,
 NAT translation, ACL evaluation against the real address, denied traffic, and
-traceroute. See `verification.md`.
+traceroute. See [`verification.md`](verification.md).

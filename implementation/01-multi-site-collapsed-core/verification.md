@@ -5,9 +5,7 @@ it before moving on, because later checks depend on it.
 
 Every number quoted as *Measured* was taken from the finished lab, not estimated.
 
-Console ports are assigned by EVE-NG in node order starting at 32769 — see
-[`addressing-plan.md`](addressing-plan.md). Reaching them with
-`telnet <eve-ip> <port>` is usually quicker than the HTML5 console.
+Console ports are listed in [`addressing-plan.md`](addressing-plan.md#console-ports).
 
 ## 0. Nodes booted with their configuration
 
@@ -143,8 +141,7 @@ up they are not installed in the RIB and this command does not show them —
 
 **Measured:** 2 of 2 summaries present on all three routers.
 
-Then the check the previous revision of this lab could not pass — reaching
-another site's **point-to-point link**, not just its VLANs:
+Then reach another site's **point-to-point link**, not just its VLANs:
 
 ```
 CSW-A-01#ping 10.0.0.2
@@ -255,8 +252,8 @@ address of `.100` can only have come from DHCP.
 
 ### SSH into an access switch
 
-The previous revision of this lab configured SSH on switches that had no
-management SVI and no default gateway, so it could never be used. Now it can:
+SSH on a switch is only usable with a management SVI and a default gateway, and
+the access switches have both:
 
 ```
 CSW-DC-01#ssh -l netadmin 10.0.10.11
@@ -313,17 +310,11 @@ RTR-A-01(config-if)# shutdown
 
 Restore the interface before moving on, and do not save while it is shut.
 
-**This test cannot pass without the IP SLA probes.** EVE-NG links are bridges and
-a bridge does not propagate link-down: the far end stays `up/up`, the connected
-route stays in the table, and an untracked static route is never withdrawn. The
-failure then looks like a design bug when it is a simulator artefact.
+**This test cannot pass without the IP SLA probes**: see the README's
+[design decisions](README.md#design-decisions-worth-knowing).
 
-### The limitation this test does not cover
-
-If an entire **site router** fails rather than a link, the two surviving routers
-each install their floating route toward the other, and packets for the dead site
-loop until the TTL expires. That is the known cost of floating statics without a
-routing protocol, and it is why IMP-02 runs OSPF end to end.
+Losing a whole site router is a different case, and this lab does not survive
+it: see the README's [known limitation](README.md#known-limitation).
 
 ## 10. Troubleshooting notes
 

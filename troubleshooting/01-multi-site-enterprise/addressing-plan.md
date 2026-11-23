@@ -81,7 +81,7 @@ pair stays OSPF-adjacent when one of them loses its uplink.
 
 R1-HQ is the only door to the outside. Its default route is static, tied to an IP
 SLA probe against `203.0.113.1` with object tracking, and injected into OSPF with
-`default-information originate`. The tracking is not decoration: EVE-NG links are
+`default-information originate`. The tracking is required: EVE-NG links are
 bridges and do not propagate link-down, so a dead upstream leaves the interface
 `up/up` and an untracked static route would keep black-holing every site's
 Internet traffic.
@@ -245,12 +245,11 @@ DTP is left negotiating on the access-to-distribution bundles (`dynamic
 desirable` on the distribution side, `dynamic auto` on the access side) and is off
 on the distribution trunk (`switchport mode trunk` plus `nonegotiate`).
 
-LACP was attempted first, and it negotiated on all eleven bundles on the EVE-NG
-build used here (`show lacp neighbor` lists a partner on every bundle and every
-bundle is `(SU)` with its members `(P)`). If yours comes up as `Po1(SD)` with the
-members suspended and `show lacp neighbor` empty — which has happened on other
-EVE-NG bridges — move the bundle to static `channel-group N mode on` and note it
-in `verification.md`.
+LACP negotiates on all eleven bundles on the EVE-NG build used here
+(`show lacp neighbor` lists a partner on every bundle and every bundle is `(SU)`
+with its members `(P)`). If yours comes up as `Po1(SD)` with the members
+suspended and `show lacp neighbor` empty, as IMP-01 does on the same host, move
+the bundle to static `channel-group N mode on`.
 
 ## VTP and spanning tree
 

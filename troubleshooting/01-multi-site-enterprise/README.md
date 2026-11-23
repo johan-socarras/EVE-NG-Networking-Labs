@@ -81,7 +81,7 @@ and blue a site or a VLAN.
 
 Three VLANs per site, numbered per site so that a VLAN id is never ambiguous
 across the WAN. The third VLAN of every site is management, so the management
-policy has somewhere to live everywhere — not only where it is convenient.
+policy applies the same way in every site.
 
 ### Headquarters
 
@@ -269,8 +269,6 @@ network passes every check in [`verification.md`](verification.md), whose
 expected values sit next to the ones measured, and the failure tests in
 section 9 were run and restored one by one. [`configs/`](configs/) holds the
 startup-configs the devices boot with for the incident.
-
-The restored baseline and the solution are not published, on purpose.
 
 ## Disclaimer
 

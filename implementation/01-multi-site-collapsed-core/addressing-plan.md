@@ -2,7 +2,7 @@
 
 14 nodes · 18 links
 
-All addressing below is taken from the running lab, not from an earlier draft.
+All addressing below is taken from the running lab.
 Every subnet's third octet is its VLAN ID, and every site is a contiguous `/16`
 so that one summary route per site is enough.
 
@@ -19,10 +19,7 @@ so that one summary route per site is enough.
 | `172.16.0.0/28` | The three WAN links of the inter-site triangle |
 
 The site summary is what makes the plan work: a single `10.1.0.0/16` seen from
-Site-DC covers Site-A's VLANs, its transit `/30` **and** its loopbacks. Routing
-each remote VLAN individually — as an earlier revision did — leaves the
-point-to-point links unreachable from the other sites, so inter-site
-`traceroute` stops one hop short of the far switch.
+Site-DC covers Site-A's VLANs, its transit `/30` **and** its loopbacks.
 
 ## Loopbacks
 
@@ -88,10 +85,8 @@ site.
 
 ### IP SLA and object tracking
 
-EVE-NG links are bridges, and **a bridge does not propagate link-down**: shutting
-an interface at one end leaves the far end `up/up`, so the connected route
-survives and an untracked static route is never withdrawn. Without this, the
-failure test cannot pass.
+Why the probes are needed is in the README's
+[design decisions](README.md#design-decisions-worth-knowing).
 
 ```
 ip sla 1
@@ -109,8 +104,7 @@ seconds and the floating route takes over.
 
 Gateway `.1` in every VLAN is the SVI on the site's multilayer switch. There is
 no first-hop redundancy here — a collapsed core with a single multilayer switch
-per site has nothing to fail over to, and pretending otherwise would be
-dishonest. FHRP is what [IMP-02](../02-three-tier-campus-redundancy/README.md) is for.
+per site has nothing to fail over to. FHRP is what [IMP-02](../02-three-tier-campus-redundancy/README.md) is for.
 
 | VLAN | Name | Site-DC | Site-A | Site-B | Addressed by |
 |---|---|---|---|---|---|

@@ -25,8 +25,8 @@ Test procedure and expected output: [`verification.md`](verification.md).
 
 ## Server-A has one cable
 
-This is the centre of the lab and it is not softened anywhere: **a server is not
-in two cities at once.** Server-A is plugged into the site it lives in, and
+This is the centre of the lab: **a server is not in two cities at once.**
+Server-A is plugged into the site it lives in, and
 nowhere else. The other site keeps its access port configured, in VLAN 10, never
 shut down and empty, with a description that says what it is waiting for:
 
@@ -68,10 +68,9 @@ One twice-NAT rule does both halves at once. A packet arriving on `outside` for
 `198.51.100.8` has its **destination** rewritten to whatever `SERVER_A` currently
 is; at the same time its **source** is PAT'd behind the inside interface
 (`192.0.2.1`), so the server answers the firewall rather than the client. That
-half is not decoration: nothing inside this lab has a route to
-`203.0.113.32/27` — the ASA does not advertise it into OSPF, and SW-B's stray
-default route is gone (item 7 of "What an earlier build got wrong") — so
-a reply addressed straight to the client would die inside. `show nat detail`
+half is needed: nothing inside this lab has a route to `203.0.113.32/27` — the
+ASA does not advertise it into OSPF and no internal device has a default route —
+so a reply addressed straight to the client would die inside. `show nat detail`
 shows both halves, here with the server in Site-A:
 
 ```
@@ -130,18 +129,12 @@ after   access-list OUTSIDE_IN line 1 extended permit icmp 203.0.113.32 255.255.
 Both captures come from an actual move of the server, taken before and after;
 they are reproduced in [`verification.md`](verification.md).
 
-As shipped, the cable is in Site-B. Re-cabling a running lab
-means stopping the three nodes the cable touches (Server-A and both switches)
-first — EVE-NG will not re-cable a node that is running — then deleting the old
-link and drawing the new one, either on the canvas or through the API. Through
-the API there are two catches: the new network has to be created with
+The three nodes stop first because EVE-NG will not re-cable a node that is
+running; the old link is then deleted and the new one drawn, on the canvas or
+through the API. Through the API there are two catches: the new network has to be created with
 `visibility: 1`, because with `0` the interface `PUT`s come back `fail`, and the
 `POST` and the two `PUT`s must not yield between them, or EVE-NG purges the
 network for having no endpoints.
-
-Needing a real cable move is the right price for representing the scenario
-honestly. A server that stays plugged into both sites is not a server that
-moves.
 
 ## Security policy
 
@@ -165,22 +158,21 @@ does not prove" below.
 **The fourth ACE is a deliberate exception, not part of the policy.** UDP
 33434–33463 is the Cisco traceroute probe range. The policy this lab states is
 ICMP echo, SSH and HTTPS to one host and nothing else; that line sits outside it
-and exists only so the traceroute section below actually works from a router. It
-is declared here rather than left to be found later.
+and exists only so the traceroute section below actually works from a router.
 
 ## Why traceroute works here
 
-An earlier build of this lab explained the traceroute away instead of making it
-work. Three separate reasons, all of them fixed here:
+A traceroute through an ASA fails for three separate reasons, and each one
+needs its own fix:
 
 1. **The ASA does not decrement the TTL by default.** A firewall that does not
    decrement it never generates the "time exceeded" a traceroute hop is made of,
    so it never appears as a hop at all. `set connection decrement-ttl` under
    `class-default` is what puts it in the hop list.
-2. **The ICMP replies were not allowed back in.** `inspect icmp` builds the
+2. **The ICMP replies are not allowed back in.** `inspect icmp` builds the
    return connection for an echo, instead of requiring a matching ACL on the way
    back.
-3. **The intermediate hops' ICMP errors never got out.** `inspect icmp error` is
+3. **The intermediate hops' ICMP errors do not get out.** `inspect icmp error` is
    what lets a "time exceeded" raised behind the firewall reach the client, and
    it rewrites the IP header embedded inside it so the addresses line up with
    the translation. Without it those hops come back as stars.
@@ -200,19 +192,18 @@ Tracing the route to 198.51.100.8
 With the server in Site-B the trace is one hop longer: `203.0.113.2`,
 `192.0.2.2`, `192.0.2.6`, `198.51.100.8`.
 
-**This has a price, and it belongs in the open.** `inspect icmp error` makes
+**This has a price.** `inspect icmp error` makes
 internal hops visible to an external client: `192.0.2.2` and `192.0.2.6` are
 inside transit addresses and they show up in a trace run from outside the
 firewall. That is the trade — a working traceroute in exchange for exposing the
 internal path. A production firewall would have to decide which of the two it
-wants; this lab chooses the traceroute and says so.
+wants; this lab chooses the traceroute.
 
 ## What this lab does not prove
 
 **Server-A is a VPCS. It does not serve SSH and it does not serve HTTPS.** It
 answers ICMP echo, and that is the whole of its repertoire. So the SSH and HTTPS
-ACEs cannot be demonstrated by connecting to a service, and nothing here claims
-otherwise.
+ACEs cannot be demonstrated by connecting to a service.
 
 What *is* demonstrated is the firewall's half of the job: that the policy
 **permits** those ports and **translates** them all the way to the real address.
@@ -223,42 +214,41 @@ carried by `show nat detail` and by the expanded ACL rather than by the retained
 which output proves which half. Whether a server on the far end answers is out
 of scope.
 
-## What an earlier build got wrong
+## Eight mistakes this build avoids
 
-This lab was rebuilt from scratch. Eight things are different from its first
-build, and each one is a defect that was found and corrected rather
-than a stylistic preference.
+Each of these breaks the lab; none of them is a matter of style.
 
-1. **The NAT rule was incomplete.** It ended at the mapped object, and the ASA
-   rejects that with `Incomplete command` — so nothing was configured and the
-   `SERVER_A` object was left unused by anything at all. The complete rule ends
+1. **A NAT rule that stops at the mapped object.** The ASA rejects it with
+   `Incomplete command`, so nothing is configured and the `SERVER_A` object is
+   left unused by anything at all. The complete rule ends
    `... destination static VIP_SERVER_A SERVER_A`.
-2. **The ACL matched the mapped address.** Since ASA 8.3 an interface ACL is
+2. **An ACL that matches the mapped address.** Since ASA 8.3 an interface ACL is
    evaluated *after* the destination NAT has been undone, that is, against the
    **real** address. `permit tcp any host <virtual IP>` therefore never matches
-   anything. The rebuilt ACL uses the `SERVER_A` object, which also makes the
-   lab's promise true — move the server and the ACL follows on its own.
+   anything. This ACL uses the `SERVER_A` object, which also makes the lab's
+   promise true — move the server and the ACL follows on its own.
    `show access-list` shows it expanded to `host 10.100.100.10`.
-3. **OSPF no longer crosses the firewall.** The ASA speaks OSPF on `inside` only,
-   with MD5 authentication, and R-Client keeps a plain default route toward the
-   firewall. Verified: R-Client forms no adjacency and learns no internal prefix.
-4. **There is a real client LAN** behind R-Client (`203.0.113.32/27`, PC-Ext at
-   `.34`), and the NAT source object is that subnet rather than a `/32`.
-5. **Traceroute works**, rather than being explained away: `inspect icmp`,
-   `inspect icmp error` and `set connection decrement-ttl`.
-6. **Addressing.** Everything public-facing is now in RFC 5737 documentation
-   space. The first build borrowed real, routable addresses for the virtual
-   address and the ISP network; they are now `198.51.100.8` and
+3. **OSPF across the firewall**, which hands the external client a copy of the
+   internal topology. Here the ASA speaks OSPF on `inside` only, and R-Client
+   forms no adjacency and learns no internal prefix — see
+   [Design decisions worth knowing](#design-decisions-worth-knowing).
+4. **A client that is only a host route.** There is a real client LAN behind
+   R-Client (`203.0.113.32/27`, PC-Ext at `.34`), and the NAT source object is
+   that subnet rather than a `/32`.
+5. **A traceroute that is explained away** instead of made to work:
+   `inspect icmp`, `inspect icmp error` and `set connection decrement-ttl`, in
+   [Why traceroute works here](#why-traceroute-works-here).
+6. **Real, routable addresses.** Everything public-facing is in RFC 5737
+   documentation space: the virtual address is `198.51.100.8` and the ISP network
    `198.51.100.0/29`.
-7. **Logging, SSH and a stray route.** The ASA now has logging enabled, so a deny
-   leaves a trace. The switches have working SSH: the first build's configs had
-   `login` with no password, which rejects every attempt, plus orphan
-   `ip ssh server algorithm` lines with no RSA key and no local user. SW-B's
-   loose default route, which was never redistributed and which SW-A therefore
-   never saw, is gone — everything internal is learned by OSPF.
-8. **The ASA needs `console serial`.** Without it the ASAv boots perfectly and
-   its serial console goes mute forever after the boot loader: the device works,
-   answers pings, and cannot be talked to.
+7. **No logging, unusable SSH and a stray route.** The ASA has logging enabled,
+   so a deny leaves a trace. The switches have working SSH: `login` with no
+   password rejects every attempt, and `ip ssh server algorithm` lines do nothing
+   without an RSA key and a local user. No internal device carries a default
+   route: everything internal is learned by OSPF.
+8. **An ASAv without `console serial`.** It boots, forwards traffic and answers
+   pings, and its console can never be reached — see
+   [Platform notes](#platform-notes).
 
 ## Design decisions worth knowing
 
@@ -285,14 +275,11 @@ arrived in later releases.
 **Public-facing addressing uses RFC 5737 documentation ranges**
 (`192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`), and the internal sites use
 RFC 1918. The lab can be imported anywhere without colliding with a real network,
-and no address in it points at something that exists — which is exactly why the
-virtual address is `198.51.100.8` and not a real public IP.
+and no address in it points at something that exists.
 
 ## Platform notes
 
-Both of these cost time and are stated here rather than hidden.
-
-**`console serial` on the ASAv is not decoration.** Without it the ASAv sends its
+**The ASAv needs `console serial`.** Without it the ASAv sends its
 console to the virtual VGA and EVE-NG's serial port stays silent after the boot
 loader. It is in the skeleton config for that reason.
 
@@ -328,7 +315,7 @@ long each credential was. Every device is fully configured, and the automated ru
 in [`verification.md`](verification.md) passes all 45 checks with zero failures,
 with Server-A in Site-B.
 
-[`configs-skeleton/`](configs-skeleton/) is the other half of the story: the
+[`configs-skeleton/`](configs-skeleton/) is the
 clean starting point for every device — hostnames, interface descriptions,
 addressing, loopbacks, the VLANs and the two ASA `nameif` interfaces — with no
 OSPF, no objects, no NAT and no ACL. Load those as the startup configs to work
@@ -355,6 +342,5 @@ If a node boots with the factory hostname (`Switch>`), its startup-config was no
 applied: EVE-NG only injects it into a node that boots clean. Stop that node,
 **Wipe** it, and start it again.
 
-To move Server-A to the other site, stop Server-A, SW-B and SW-A first —
-EVE-NG will not re-cable a running node — then follow "Moving Server-A between
-sites" above.
+To move Server-A to the other site, follow
+[Moving Server-A between sites](#moving-server-a-between-sites).

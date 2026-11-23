@@ -246,8 +246,5 @@ reachable — `.2` directly through ISP-2, and `.1` through ISP-2 and the peerin
 link, with ISP-1 answering over its floating return route. Measured: no loss to
 either destination.
 
-This is the test that justifies the peering link and the IP SLA probes. Before
-they existed it failed in two different ways: traffic to the "wrong" ISP died
-there, and once an upstream went down the Core kept advertising a default route
-into a black hole, because an EVE-NG bridge never signals link-down to the far
-end.
+This is the test that justifies the peering link and the IP SLA probes: why
+each one is needed is in [`addressing-plan.md`](addressing-plan.md#internet-edge).

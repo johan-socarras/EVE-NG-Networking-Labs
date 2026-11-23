@@ -48,8 +48,7 @@ creating neighbours. `show ip ospf neighbor` returning any other count means the
 design drifted.
 
 **The ISP links stay out of OSPF** on purpose. The Internet edge is reached by
-static and default routing, not by peering with a simulated ISP. Their absence
-from the OSPF process is intentional, not an oversight.
+static and default routing, not by peering with a simulated ISP.
 
 **The two ISPs are linked to each other** (`203.0.113.4/30`) and each edge static
 route is tied to an IP SLA probe. Both details exist for the same reason: without
@@ -88,11 +87,10 @@ rejected line by line and leaves the interface unconfigured. Only `D-SW-*` and
 
 **LACP negotiated normally in this lab.** `Po1` came up as `Po1(SU)`, protocol
 `LACP`, with both members `(P)`, and `show lacp neighbor` lists the partner on
-each side. That is worth stating explicitly, because IMP-01 in this same repo —
-same EVE-NG host, same IOSvL2 image — could not get LACP to negotiate over its
-links and runs its EtherChannels static. What differs between the two has not
-been tracked down yet; until it is, treat LACP over EVE-NG bridges as something
-to verify with `show lacp neighbor` rather than assume.
+each side. IMP-01, on the same EVE-NG host and the same IOSvL2 image, could not
+get LACP to negotiate over its links and runs its EtherChannels static, and the
+cause was never found: treat LACP over EVE-NG bridges as something to verify
+with `show lacp neighbor` rather than assume.
 
 ## What is in `configs/`
 
@@ -100,8 +98,7 @@ to verify with `show lacp neighbor` rather than assume.
 and sanitised. Every device is fully configured and the lab passes the whole
 of [`verification.md`](verification.md), including the failure tests.
 
-
-[`configs-skeleton/`](configs-skeleton/) is the other half of the story: the
+[`configs-skeleton/`](configs-skeleton/) is the
 clean starting point for every device, with no protocols at all, for working
 through the lab from scratch.
 

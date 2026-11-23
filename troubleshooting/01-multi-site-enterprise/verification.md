@@ -36,7 +36,7 @@ not be.
 | Trunks are trunks | `show interfaces trunk` | Every access-to-distribution bundle and the distribution trunk in `trunking`, native VLAN 1, allowed list exactly the site's VLANs |
 | No trunk ended up as an access port | `show interfaces switchport \| include Name\|Operational Mode` | No bundle member in `static access` |
 | EtherChannels are up | `show etherchannel summary` | 11 bundles, 22 member ports, every bundle `(SU)` with its members `(P)` |
-| LACP negotiated, or the fallback is recorded | `show lacp neighbor` | A neighbour on each bundle. If empty and the bundle is `(SD)`, the bundle is static `mode on` — write that here, with the date. **Measured: LACP negotiated on all 11 bundles, no fallback was needed** |
+| LACP negotiated | `show lacp neighbor` | A neighbour on each bundle. **Measured: LACP negotiated on all 11 bundles** |
 | Spanning tree roots are where they belong | `show spanning-tree vlan <id> \| include Root ID\|This bridge` | HQ: DIST-A root for 10 and 30, DIST-B for 20 · BR: DIST-A for 110 and 130, DIST-B for 120 · DR: DR-DIST-A for 210, 220, 230 |
 | Mode is Rapid-PVST everywhere | `show spanning-tree summary \| include mode` | `rapid-pvst` on all ten switches |
 | User ports are protected | `show spanning-tree interface <port> portfast`, `show port-security` | PortFast and BPDU guard on the nine access ports; port security max 1, dynamic, `violation shutdown`, zero violations |

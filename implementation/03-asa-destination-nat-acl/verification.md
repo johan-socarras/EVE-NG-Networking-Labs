@@ -11,8 +11,8 @@ it before moving on, because later checks depend on it.
   different moments** — which is why the counters in one do not continue the
   counters in another.
 - A block with no prompt is either a configuration line quoted from
-  [`configs/`](configs/), or — where it is labelled as such — the broken line
-  from the first build of this lab.
+  [`configs/`](configs/), or — where it is labelled as such — a broken line
+  shown as a counterexample.
 - Where the only evidence retained is the automated harness's own result line,
   that line is shown instead and said to be one. The harness printed its check
   names in Spanish; they are translated here, and nothing else in those lines
@@ -22,20 +22,19 @@ it before moving on, because later checks depend on it.
 The full run is **45 automated checks, 0 failures**.
 
 Some harness lines carry a `FIX-n` tag. The numbering is the build script's,
-which labels five of the rebuild's corrections: **FIX-1** the complete NAT rule,
+which tags five of the mistakes the README lists: **FIX-1** the complete NAT rule,
 **FIX-2** the ACL against the real address, **FIX-3** OSPF off the outside
 interface and authenticated inside, **FIX-4** working SSH on the switches and
-`dh-group14-sha1` on the ASA, **FIX-5** logging enabled and SW-B's stray default
-route removed.
+`dh-group14-sha1` on the ASA, **FIX-5** logging enabled and no stray default
+route on SW-B.
 
 **Only three of those five are tagged in the run, because only three are
 asserted by a check of their own:** FIX-1 in block 6, FIX-2 in block 7, FIX-3 in
 block 3. FIX-5's logging half is exercised indirectly — the syslog check in
 section 8 cannot pass on an ASA with logging off — but no check asserts that
-SW-B's stray default route is gone, and **no check touches FIX-4 at all**: the
+SW-B has no stray default route, and **no check touches FIX-4 at all**: the
 switches' SSH configuration and the ASA's key-exchange group are read out of
-[`configs/`](configs/), not measured. The README lists all eight differences
-from the first build.
+[`configs/`](configs/), not measured. The README lists all eight mistakes.
 
 Console ports are assigned by EVE-NG as `32768 + node id`:
 
@@ -59,13 +58,10 @@ Four things about the ASAv console specifically, all of which cost time here:
   `Pre-configure Firewall now through interactive prompts [yes]?`. If that is not
   answered `no`, the console stays inside the wizard and everything sent
   afterwards is swallowed by it.
-- The configuration includes `console serial`. Without that line the ASAv boots
-  perfectly well and its serial console stays mute forever — there is no error to
-  read, because nothing is printed at all.
+- The configuration includes `console serial`; why, in the README's
+  [Platform notes](README.md#platform-notes).
 
-**Where Server-A is.** Server-A has **one** cable. It is plugged into the site it
-lives in; the other site keeps its access port in VLAN 10, never shut down and
-empty, described `Reserved for Server-A`. In the configurations published in
+**Where Server-A is.** In the configurations published in
 [`configs/`](configs/), and in the harness run reproduced in sections 1–9,
 Server-A is in **Site-B** on `10.100.100.10` — that is the lab as shipped.
 Section 10 is the move itself, and its two captures run in the other direction,
@@ -136,10 +132,9 @@ MTU         : 1500
 
 ## 2. OSPF lives inside the firewall only
 
-The first build of this lab ran OSPF **through** the ASA, so the external
-client learned the entire internal topology from the device that exists to hide
-it. Here the ASA speaks OSPF on `inside` only, with MD5 authentication, and
-R-Client keeps a single static default route.
+The ASA speaks OSPF on `inside` only, with MD5 authentication, and R-Client
+keeps a single static default route, so the external client learns nothing of
+the internal topology from the device that exists to hide it.
 
 ```
 ASA#      show ospf neighbor
@@ -217,15 +212,15 @@ a check at 3 replies out of 4 and still measured 4/4 on every pair.
 
 ## 4. The NAT rule is complete, and it translates
 
-This is FIX-1. In the first build the rule ended at the mapped object:
+This is FIX-1. A rule that ends at the mapped object, shown here as the
+counterexample:
 
 ```
 nat (outside,inside) source dynamic CLIENT_LAN interface destination static VIP_SERVER_A
 ```
 
-The ASA rejects that with `Incomplete command`, so no rule was ever installed —
-and the `SERVER_A` object, the one thing the whole lab is built around, was left
-unused. A destination-static clause needs **both** halves: the mapped address the
+is rejected with `Incomplete command`, so no rule is installed — and the
+`SERVER_A` object, the one thing the whole lab is built around, is left unused. A destination-static clause needs **both** halves: the mapped address the
 client sends to, and the real address it becomes.
 
 ```
@@ -288,18 +283,18 @@ what the check actually requires is only that `untranslate_hits` is non-zero.
 
 ## 5. The ACL is evaluated against the REAL address
 
-This is FIX-2, and it is the subtlest error in the first build. That version
-filtered on the mapped address:
+This is FIX-2, and it is the subtlest of the mistakes: filtering on the mapped
+address.
 
 ```
 access-list OUTSIDE_IN extended permit tcp any host <virtual IP>
 ```
 
 Since ASA 8.3 the firewall **undoes destination NAT before the interface ACL is
-evaluated**, so an ACE written against the virtual address can never match. The
-lab appeared to work only because it was never tested with a packet.
+evaluated**, so an ACE written against the virtual address can never match, and
+a lab built that way only appears to work until it is tested with a packet.
 
-The fix is to write the ACL against the object:
+This ACL is written against the object:
 
 ```
 access-list OUTSIDE_IN extended permit icmp object CLIENT_LAN object SERVER_A echo
@@ -425,8 +420,8 @@ wrong address would fail it.
 Server-A is a VPCS. It answers ICMP and it serves nothing else — no SSH daemon,
 no web server. What can be demonstrated, and what is demonstrated here, is that
 **the firewall permits those two protocols and translates them all the way to the
-real address**. Whether a service answers is out of scope for this lab, and
-section [Not tested](#not-tested) says so rather than pretending otherwise.
+real address**. Whether a service answers is out of scope for this lab: see
+[Not tested](#not-tested).
 
 ```
 ASA# packet-tracer input outside tcp 203.0.113.34 1234 198.51.100.8 443
@@ -491,8 +486,8 @@ the bug FIX-2 exists to remove.
 
 As with section 7, the capture is the assertion rather than the raw log line;
 `show logging | include 106023` prints it on a running lab. Note that this check
-depends on FIX-5 — the first build had no `logging enable`, so the ASA kept no
-record of anything it denied.
+depends on FIX-5: without `logging enable` the ASA keeps no record of anything it
+denies.
 
 ---
 
@@ -516,9 +511,8 @@ Four hops: the ASA outside interface, SW-A, SW-B, then the server behind its
 virtual address. Reading them left to right is reading the path the packet takes
 through the lab.
 
-Three configuration items are required for this to work at all. They are the
-traceroute correction — item 5 in the README's list of what the first build got
-wrong. They carry no `FIX-n` tag because no single automated check isolates them;
+Three configuration items are required for this to work at all — item 5 in the
+README's list of mistakes. They carry no `FIX-n` tag because no single automated check isolates them;
 what proves them is the hop list above:
 
 | Line | Without it |
@@ -530,11 +524,8 @@ what proves them is the hop list above:
 Plus the fourth ACE from section 5, permitting UDP 33434–33463 inbound, since
 IOS traceroute probes with UDP.
 
-**The cost, stated plainly:** `inspect icmp error` is what makes the internal
-transit addresses `192.0.2.2` and `192.0.2.6` visible to an external client. A
-firewall that hides its inside does not normally let those errors through. This
-lab chooses a working traceroute over that concealment, and the traceroute above
-is what that choice looks like from outside.
+What this costs, internal transit addresses visible from outside, is under
+[Deliberate exceptions](#deliberate-exceptions-and-known-limits).
 
 ---
 
@@ -544,14 +535,9 @@ The promise is that the external client always reaches Server-A at
 `198.51.100.8`, and that moving the server between sites costs **one line** on the
 firewall — with the client untouched and the ACL untouched.
 
-Server-A has one cable. It is not connected to both sites with one leg shut; a
-server is not in two cities at once. Moving it is re-plugging the real cable, and
-the site it leaves keeps its access port in VLAN 10, never shut down and empty,
-waiting for it. That makes the EVE-NG side of the move a real step rather than something a
-pre-built topology does for you: the three nodes the cable touches have to be stopped, the
-old link deleted and a new one drawn — on the canvas, or through the API with
-`visibility: 1` on the new network. It is the correct price for representing the
-move honestly.
+Server-A has one cable, so the move is a real re-cable: the three nodes the cable
+touches are stopped, the old link deleted and a new one drawn — on the canvas, or
+through the API with `visibility: 1` on the new network.
 
 ### Before: Server-A in Site-B
 
@@ -778,14 +764,14 @@ harness waits for both.
 
 **The UDP 33434–33463 ACE is an exception on purpose.** The stated policy for
 this lab is ICMP echo, SSH and HTTPS to Server-A and nothing else. The fourth ACE
-opens the IOS traceroute probe range so section 9 works end to end. It is a
-teaching decision, not an oversight; remove it and the policy is what it claims
+opens the IOS traceroute probe range so section 9 works end to end. Remove it
+and the policy is what it claims
 to be, and the traceroute stops past the ASA.
 
 **`inspect icmp error` leaks internal hops.** With it enabled, the external
 client sees `192.0.2.2` and `192.0.2.6` — the internal transit links — in its
-traceroute. That is information a production firewall would normally withhold. It
-is the price of a traceroute that works, and it is paid knowingly.
+traceroute. That is information a production firewall would normally withhold:
+it is the price of a traceroute that works.
 
 **`ssh key-exchange group dh-group14-sha1` is the strongest available here.**
 ASA 9.9(2) offers exactly two key-exchange groups, `dh-group1-sha1` and

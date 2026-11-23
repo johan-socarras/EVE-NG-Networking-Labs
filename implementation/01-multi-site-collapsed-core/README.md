@@ -17,7 +17,6 @@ answering.
 
 <sub>Click the image to open it at full size.</sub>
 
-
 ## Layers
 
 **Site router — `RTR-DC-01`, `RTR-A-01`, `RTR-B-01`.** IOSv routers, fully
@@ -81,11 +80,11 @@ ip route 10.0.0.0 255.255.0.0 172.16.0.1 track 1
 ip route 10.0.0.0 255.255.0.0 172.16.0.10 100
 ```
 
-The `/16` is what makes the transit `/30`s reachable from the other sites — a
-previous revision routed each remote VLAN individually, so the point-to-point
-links themselves were unreachable and inter-site `traceroute` died one hop short.
+The `/16` is what makes the transit `/30`s reachable from the other sites:
+routed one remote VLAN at a time, the point-to-point links themselves would be
+unreachable and inter-site `traceroute` would die one hop short.
 
-**The tracking is not decoration.** EVE-NG links are Linux bridges and a bridge
+**The tracking is required.** EVE-NG links are Linux bridges and a bridge
 does not propagate link-down: shutting an interface at one end leaves the far end
 `up/up`, the connected route stays in the table and a plain static route is never
 invalidated. Without IP SLA the failure test cannot pass, and the failure looks
@@ -103,8 +102,8 @@ ip access-list extended ISOLATED-IN
 
 The outbound list mirrors it and additionally permits `ttl-exceeded` and
 `unreachable`, so path errors still reach the host and `traceroute` from an
-isolated endpoint remains usable. An inbound-only list, as an earlier revision
-had, filters what leaves the VLAN and nothing that enters it.
+isolated endpoint remains usable. An inbound-only list would filter what leaves
+the VLAN and nothing that enters it.
 
 **Every user VLAN gets its address from its own site router.** `ip helper-address`
 on the VLAN 20 and 30 SVIs points at the site router's loopback, and the pools
@@ -113,8 +112,7 @@ demonstrable rather than merely configured.
 
 ## Platform notes
 
-Neither of these is a design choice, and both are stated here rather than
-hidden.
+Neither of these is a design choice.
 
 **EtherChannel is static, because LACP did not negotiate in this lab.**
 Configured with `channel-group N mode active` on both ends, every bundle stayed
@@ -149,10 +147,9 @@ sanitised. Secrets are replaced by a fixed-length `<REDACTED>` marker — never 
 a run of asterisks matching the original length, which leaks exactly how long
 each credential was.
 
-[`configs-skeleton/`](configs-skeleton/) is the other half: the clean starting
+[`configs-skeleton/`](configs-skeleton/) is the clean starting
 point for every device, with hostnames, interface descriptions, routed
-addressing and loopbacks, and no protocols at all. Load those as the startup
-configs to work through the lab yourself.
+addressing and loopbacks, and no protocols at all.
 
 ## Running the lab
 
